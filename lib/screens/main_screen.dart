@@ -51,6 +51,7 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.black, size: 28),
             onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.notification);
               // Chức năng thông báo
             },
           ),

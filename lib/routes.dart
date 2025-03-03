@@ -8,6 +8,7 @@ import 'screens/splash/splash_screen.dart';
 import 'screens/splash/slide_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/product/search_screen.dart';
+import 'screens/product/notification_screen.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -18,15 +19,21 @@ class AppRoutes {
   static const String otp = '/otp';
   static const String home = '/main'; // Trang chủ với Bottom Navigation Bar
   static const String search = '/search';
+  static const String notification = '/notification';
+  // Thêm route riêng cho HomeScreen nếu cần (tùy chọn)
+  static const String homeDetail = '/home-detail';
 }
 
 Map<String, WidgetBuilder> appRoutes = {
-  AppRoutes.search: (context) => const SearchScreen(),
   AppRoutes.splash: (context) => const SplashScreen(),
   AppRoutes.slide: (context) => const SlideScreen(),
   AppRoutes.login: (context) => const LoginScreen(),
   AppRoutes.register: (context) => const RegisterScreen(),
   AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
   AppRoutes.otp: (context) => const OtpScreen(),
-  AppRoutes.home: (context) => const MainScreen(), // Chuyển sang MainScreen thay vì HomeScreen
+  AppRoutes.home: (context) => const MainScreen(), // Dùng MainScreen chứa Bottom Navigation Bar
+  AppRoutes.search: (context) => const SearchScreen(),
+  AppRoutes.notification: (context) => const NotificationScreen(),
+  // Thêm route cho HomeScreen nếu cần (tùy chọn)
+  // AppRoutes.homeDetail: (context) => const HomeScreen(),
 };
