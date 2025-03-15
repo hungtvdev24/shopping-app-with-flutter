@@ -7,6 +7,7 @@ import 'screens/home/home_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/splash/slide_screen.dart';
 import 'screens/main_screen.dart';
+import 'screens/profile/address_list_screen.dart'; // Đã có import này
 import 'screens/product/search_screen.dart';
 import 'screens/product/notification_screen.dart';
 
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String otp = '/otp';
   static const String home = '/main'; // Trang chủ với Bottom Navigation Bar
+  static const String addressList = '/address-list'; // Thêm hằng số này
   static const String search = '/search';
   static const String notification = '/notification';
   // Thêm route riêng cho HomeScreen nếu cần (tùy chọn)
@@ -32,6 +34,7 @@ Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
   AppRoutes.otp: (context) => const OtpScreen(),
   AppRoutes.home: (context) => const MainScreen(), // Dùng MainScreen chứa Bottom Navigation Bar
+  AppRoutes.addressList: (context) => const AddressListScreen(), // Thêm ánh xạ này
   AppRoutes.search: (context) => const SearchScreen(),
   AppRoutes.notification: (context) => const NotificationScreen(),
   // Thêm route cho HomeScreen nếu cần (tùy chọn)

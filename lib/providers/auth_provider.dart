@@ -22,6 +22,7 @@ class AuthProvider extends ChangeNotifier {
         'password': password,
       });
 
+      print('Login response: $response');
       if (response.containsKey('token')) {
         _token = response['token'] as String;
         _errorMessage = null;
@@ -59,7 +60,8 @@ class AuthProvider extends ChangeNotifier {
         'password': password,
       });
 
-      if (response.containsKey('message') && response['message'] == 'User registered successfully') {
+      print('Register response: $response');
+      if (response.containsKey('message') && response['message'] == 'Đăng ký thành công') {
         _errorMessage = null;
         print('Register successful');
       } else if (response.containsKey('error')) {

@@ -1,40 +1,32 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'package:provider/provider.dart';
-import '../../core/api/api_client.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/cart_provider.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Map<String, dynamic> product;
 
   const ProductDetailScreen({super.key, required this.product});
 
-  Future<void> _addToCart(BuildContext context, String? token, int productId) async {
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+  Future<void> _addToCart(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    if (userProvider.token == null) {
+      scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Vui lòng đăng nhập để thêm vào giỏ hàng!')),
       );
       return;
     }
 
     try {
-      final response = await ApiClient.postData(
-        'cart/add/$productId',
-        {"soLuong": 1}, // Mặc định thêm 1 sản phẩm
-        token: token,
+      await cartProvider.addToCart(userProvider.token!, product['id_sanPham'] as int, 1, context); // Thêm context
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
       );
-
-      if (response.containsKey('message')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'])),
-        );
-      } else if (response.containsKey('error')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: ${response['error']}')),
-        );
-      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Đã xảy ra lỗi: $e')),
       );
     }
@@ -43,7 +35,6 @@ class ProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png";
-    final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -57,7 +48,6 @@ class ProductDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ảnh sản phẩm
             Container(
               width: double.infinity,
               height: 300,
@@ -85,7 +75,7 @@ class ProductDetailScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 300,
                   errorBuilder: (context, error, stackTrace) {
-                    print('Error loading image: $error');
+                    // Loại bỏ print trong production
                     return const Center(child: Icon(Icons.error, size: 50));
                   },
                   loadingBuilder: (context, child, loadingProgress) {
@@ -95,7 +85,6 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Thông tin sản phẩm
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -141,17 +130,12 @@ class ProductDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // Nút thêm vào giỏ hàng
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _addToCart(
-                    context,
-                    userProvider.token,
-                    product['id_sanPham'] as int,
-                  ),
+                  onPressed: () => _addToCart(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 16),

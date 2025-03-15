@@ -60,4 +60,23 @@ class CartService {
       throw Exception('Lỗi khi xóa mục giỏ hàng: $e');
     }
   }
+
+  // Thêm phương thức mới để thêm sản phẩm vào giỏ hàng
+  static Future<Map<String, dynamic>> addToCart(String token, int productId, int quantity) async {
+    try {
+      final response = await ApiClient.postData(
+        'cart/add/$productId', // Endpoint cần khớp với API backend
+        {"soLuong": quantity},
+        token: token,
+      );
+
+      if (response.containsKey('error')) {
+        throw Exception(response['error']);
+      }
+
+      return response;
+    } catch (e) {
+      throw Exception('Lỗi khi thêm sản phẩm vào giỏ hàng: $e');
+    }
+  }
 }
