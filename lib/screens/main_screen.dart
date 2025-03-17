@@ -1,44 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart'; // chỉ import nếu cần
 import '../widgets/bottom_nav_bar.dart';
 import '../routes.dart';
+
+// Các màn hình con
 import 'home/home_screen.dart';
 import 'home/filter_screen.dart';
 import 'home/featured_products_screen.dart';
 import 'home/cart_screen.dart';
 import 'home/profile_screen.dart';
-import 'profile/address_list_screen.dart';
-import '../providers/cart_provider.dart';
-import '../providers/user_provider.dart';
-import '../providers/address_provider.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()..fetchUserData()),
-        ChangeNotifierProvider(create: (_) => AddressProvider()), // Đã có
-      ],
-      child: MaterialApp(
-        title: 'BeeStyle',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          useMaterial3: true,
-        ),
-        initialRoute: AppRoutes.home, // Hoặc AppRoutes.splash nếu muốn bắt đầu từ SplashScreen
-        routes: appRoutes,
-      ),
-    );
-  }
-}
+// Nếu bạn dùng CartProvider trong initState, bạn có thể import ở đây
+// import '../providers/cart_provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -51,17 +24,18 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
+  // Nếu bạn cần thao tác CartProvider, có thể làm ở initState
   @override
   void initState() {
     super.initState();
-    Provider.of<CartProvider>(context, listen: false)
-        .addListener(_refreshCartIfActive);
+    // ví dụ:
+    // Provider.of<CartProvider>(context, listen: false).addListener(_refreshCartIfActive);
   }
 
   @override
   void dispose() {
-    Provider.of<CartProvider>(context, listen: false)
-        .removeListener(_refreshCartIfActive);
+    // nếu đã addListener, cần removeListener
+    // Provider.of<CartProvider>(context, listen: false).removeListener(_refreshCartIfActive);
     _pageController.dispose();
     super.dispose();
   }
@@ -131,6 +105,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
+/// Giữ màn hình con “sống” khi chuyển tab
 class KeepAliveScreen extends StatefulWidget {
   final Widget child;
   const KeepAliveScreen({super.key, required this.child});
@@ -146,7 +121,7 @@ class _KeepAliveScreenState extends State<KeepAliveScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    super.build(context); // quan trọng để AutomaticKeepAliveClientMixin hoạt động
     return widget.child;
   }
 }

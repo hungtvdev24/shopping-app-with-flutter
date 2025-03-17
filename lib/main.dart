@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+// Import các provider
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/address_provider.dart';
 import 'providers/checkout_provider.dart';
+import 'providers/myorder_provider.dart';
+// Import file routes
 import 'routes.dart';
 
-// 1. Khai báo routeObserver toàn cục
+// Khai báo routeObserver nếu cần
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() {
@@ -22,6 +25,8 @@ void main() {
         ChangeNotifierProvider(create: (context) => CartProvider()),
         ChangeNotifierProvider(create: (context) => AddressProvider()),
         ChangeNotifierProvider(create: (context) => CheckoutProvider()),
+        // Nếu bạn có MyOrderProvider, cũng đăng ký tại đây
+        ChangeNotifierProvider(create: (context) => MyOrderProvider()),
       ],
       child: const MyApp(),
     ),
@@ -37,10 +42,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Ứng dụng bán hàng',
       theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: AppRoutes.splash, // Màn hình khởi động
-      routes: appRoutes, // Sử dụng map routes đã định nghĩa
-
-      // 2. Truyền routeObserver vào navigatorObservers
+      initialRoute: AppRoutes.splash, // Hoặc route bạn muốn
+      routes: appRoutes, // Map các route
       navigatorObservers: [
         routeObserver,
       ],

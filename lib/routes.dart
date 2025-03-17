@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+// Các màn hình
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -7,9 +9,12 @@ import 'screens/home/home_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/splash/slide_screen.dart';
 import 'screens/main_screen.dart';
-import 'screens/profile/address_list_screen.dart'; // Đã có import này
+import 'screens/profile/address_list_screen.dart';
 import 'screens/product/search_screen.dart';
 import 'screens/product/notification_screen.dart';
+
+// Màn hình đơn hàng (MyOrdersScreen)
+import 'screens/order/order_screen.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -18,12 +23,12 @@ class AppRoutes {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String otp = '/otp';
-  static const String home = '/main'; // Trang chủ với Bottom Navigation Bar
-  static const String addressList = '/address-list'; // Thêm hằng số này
+  static const String home = '/main';
+  static const String addressList = '/address-list';
+  static const String order = '/order-list';
   static const String search = '/search';
   static const String notification = '/notification';
-  // Thêm route riêng cho HomeScreen nếu cần (tùy chọn)
-  static const String homeDetail = '/home-detail';
+// Nếu cần route chi tiết order => '/order-detail', ...
 }
 
 Map<String, WidgetBuilder> appRoutes = {
@@ -33,10 +38,11 @@ Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.register: (context) => const RegisterScreen(),
   AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
   AppRoutes.otp: (context) => const OtpScreen(),
-  AppRoutes.home: (context) => const MainScreen(), // Dùng MainScreen chứa Bottom Navigation Bar
-  AppRoutes.addressList: (context) => const AddressListScreen(), // Thêm ánh xạ này
+  AppRoutes.home: (context) => const MainScreen(),
+  AppRoutes.addressList: (context) => const AddressListScreen(),
   AppRoutes.search: (context) => const SearchScreen(),
   AppRoutes.notification: (context) => const NotificationScreen(),
-  // Thêm route cho HomeScreen nếu cần (tùy chọn)
-  // AppRoutes.homeDetail: (context) => const HomeScreen(),
+
+  // Màn hình xem đơn hàng của tôi
+  AppRoutes.order: (context) => const MyOrdersScreen(),
 };

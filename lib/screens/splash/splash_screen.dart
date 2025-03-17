@@ -13,10 +13,22 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Chuyển màn hình sau 3 giây với hiệu ứng mờ dần
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const SlideScreen()),
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 500),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+          const SlideScreen(),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+        ),
       );
     });
   }
@@ -25,12 +37,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
         child: Image.asset(
-          'assets/images/anh2.png',
-          width: 150,
-          height: 150,
-          fit: BoxFit.contain,
+          'assets/images/anh5.png',
+          fit: BoxFit.cover,
         ),
       ),
     );

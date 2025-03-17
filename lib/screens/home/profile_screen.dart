@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/user_provider.dart'; // Đảm bảo đường dẫn đúng
-import '../profile/address_list_screen.dart';
-import '../../routes.dart'; // AppRoutes
-// Nếu thiếu các import khác, hãy thêm vào
+
+import '../../providers/user_provider.dart';
+import '../../routes.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -50,34 +49,33 @@ class ProfileScreen extends StatelessWidget {
         // Nếu không lỗi, không loading => đã có userData
         final userData = userProvider.userData!;
 
-        // Không dùng AppBar mặc định, mà thiết kế giao diện theo hình
         return Scaffold(
           backgroundColor: Colors.grey[100],
           body: SafeArea(
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  // 1) Header "Hi, Tên" + email
+                  // 1) Header
                   _buildProfileHeader(context, userData),
 
-                  // 2) Thẻ "Starter Plan" (hoặc gói nâng cấp)
+                  // 2) Thẻ "Starter Plan"
                   _buildPlanCard(),
 
-                  // 3) Voucher (giữ nguyên như cũ, chỉ bo góc và xếp sau plan)
+                  // 3) Voucher
                   _buildVoucherSection(),
 
-                  // 4) Tiêu đề "Tài khoản" (giống "Account" trong ảnh)
+                  // 4) Tiêu đề "Tài khoản"
                   _buildSectionTitle("Tài khoản"),
 
-                  // 5) Danh sách các chức năng (Orders, Returns, Wishlist, v.v.)
+                  // 5) Danh sách chức năng
                   _buildProfileOptions(context),
 
-                  // 6) Lịch sử xem gần đây
+                  // 6) Lịch sử xem
                   _buildHistorySection(),
 
                   const SizedBox(height: 20),
 
-                  // 7) Nút Đăng xuất
+                  // 7) Đăng xuất
                   _buildLogoutButton(context, userProvider),
 
                   const SizedBox(height: 20),
@@ -91,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------------------------------
-  // 1) HEADER - Hiển thị avatar, tên, email, ... (bo góc, nền trắng)
+  // 1) HEADER
   // --------------------------------------------------------------------------
   Widget _buildProfileHeader(BuildContext context, Map<String, dynamic> userData) {
     final String userName = userData['name'] ?? "Người dùng";
@@ -115,7 +113,7 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Ảnh đại diện
+          // Avatar
           ClipRRect(
             borderRadius: BorderRadius.circular(40),
             child: SizedBox(
@@ -158,7 +156,7 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
 
-          // Icon mũi tên, giả lập "chuyển tới trang chỉnh sửa" (nếu cần)
+          // Icon mũi tên
           IconButton(
             onPressed: () {
               // Mở trang cài đặt / chỉnh sửa hồ sơ (nếu có)
@@ -171,14 +169,13 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------------------------------
-  // 2) PLAN CARD - Giống "Starter Plan" trong hình
+  // 2) PLAN CARD
   // --------------------------------------------------------------------------
   Widget _buildPlanCard() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        // Màu tím nhạt / gradient tùy thích
         gradient: const LinearGradient(
           colors: [Color(0xFF7F00FF), Color(0xFFAE52BB)],
           begin: Alignment.topLeft,
@@ -226,10 +223,10 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          // Ảnh minh họa hoặc icon
           const SizedBox(width: 16),
+          // Ảnh minh họa
           Image.asset(
-            "assets/upgrade_illustration.png", // nếu có
+            "assets/upgrade_illustration.png",
             width: 60,
             height: 60,
             fit: BoxFit.cover,
@@ -245,7 +242,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------------------------------
-  // 3) VOUCHER SECTION (giữ lại, chỉ bo góc + shadow)
+  // 3) VOUCHER SECTION
   // --------------------------------------------------------------------------
   Widget _buildVoucherSection() {
     return Container(
@@ -290,7 +287,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------------------------------
-  // 4) TIÊU ĐỀ PHẦN "TÀI KHOẢN" / "ACCOUNT"
+  // 4) TIÊU ĐỀ PHẦN "TÀI KHOẢN"
   // --------------------------------------------------------------------------
   Widget _buildSectionTitle(String title) {
     return Container(
@@ -308,7 +305,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --------------------------------------------------------------------------
-  // 5) DANH SÁCH CÁC CHỨC NĂNG (Orders, Returns, Wishlist, v.v.)
+  // 5) DANH SÁCH CHỨC NĂNG
   // --------------------------------------------------------------------------
   Widget _buildProfileOptions(BuildContext context) {
     return Column(
@@ -317,14 +314,15 @@ class ProfileScreen extends StatelessWidget {
           Icons.shopping_bag,
           "Đơn hàng của tôi",
               () {
-            // Mở danh sách đơn hàng
+            // Khi bấm => sang MyOrdersScreen
+            Navigator.pushNamed(context, AppRoutes.order);
           },
         ),
         _buildProfileOption(
           Icons.autorenew,
           "Trả hàng (Returns)",
               () {
-            // Mở trang trả hàng (nếu có)
+            // Mở trang trả hàng
           },
         ),
         _buildProfileOption(
@@ -359,7 +357,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  /// Widget dùng chung cho 1 dòng tuỳ chọn
   Widget _buildProfileOption(IconData icon, String title, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -387,7 +384,6 @@ class ProfileScreen extends StatelessWidget {
   // 6) LỊCH SỬ XEM GẦN ĐÂY
   // --------------------------------------------------------------------------
   Widget _buildHistorySection() {
-    // Danh sách demo
     final List<Map<String, String>> historyItems = [
       {"image": "assets/anh1.png", "name": "Áo sơ mi nam trắng"},
       {"image": "assets/anh2.png", "name": "Áo thun nam cổ tròn"},
@@ -428,8 +424,7 @@ class ProfileScreen extends StatelessWidget {
                     width: 50,
                     height: 50,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.error),
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
                   ),
                 ),
                 title: Text(item["name"]!),
