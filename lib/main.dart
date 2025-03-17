@@ -9,6 +9,10 @@ import 'providers/cart_provider.dart';
 import 'providers/address_provider.dart';
 import 'providers/checkout_provider.dart';
 import 'providers/myorder_provider.dart';
+
+// Thêm import cho FavoriteProductProvider
+import 'providers/favorite_product_provider.dart';
+
 // Import file routes
 import 'routes.dart';
 
@@ -25,8 +29,10 @@ void main() {
         ChangeNotifierProvider(create: (context) => CartProvider()),
         ChangeNotifierProvider(create: (context) => AddressProvider()),
         ChangeNotifierProvider(create: (context) => CheckoutProvider()),
-        // Nếu bạn có MyOrderProvider, cũng đăng ký tại đây
         ChangeNotifierProvider(create: (context) => MyOrderProvider()),
+
+        // Đăng ký FavoriteProductProvider ở đây:
+        ChangeNotifierProvider(create: (context) => FavoriteProductProvider()),
       ],
       child: const MyApp(),
     ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart'; // chỉ import nếu cần
+// import 'package:provider/provider.dart'; // Chỉ import nếu cần
 import '../widgets/bottom_nav_bar.dart';
 import '../routes.dart';
 
@@ -10,8 +10,8 @@ import 'home/featured_products_screen.dart';
 import 'home/cart_screen.dart';
 import 'home/profile_screen.dart';
 
-// Nếu bạn dùng CartProvider trong initState, bạn có thể import ở đây
-// import '../providers/cart_provider.dart';
+// RouteObserver nếu bạn cần
+// import '../main.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -24,26 +24,16 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
-  // Nếu bạn cần thao tác CartProvider, có thể làm ở initState
   @override
   void initState() {
     super.initState();
-    // ví dụ:
-    // Provider.of<CartProvider>(context, listen: false).addListener(_refreshCartIfActive);
+    // Nếu cần tương tác CartProvider hay gì khác thì thêm ở đây
   }
 
   @override
   void dispose() {
-    // nếu đã addListener, cần removeListener
-    // Provider.of<CartProvider>(context, listen: false).removeListener(_refreshCartIfActive);
     _pageController.dispose();
     super.dispose();
-  }
-
-  void _refreshCartIfActive() {
-    if (_selectedIndex == 3) {
-      setState(() {});
-    }
   }
 
   void _onItemTapped(int index) {

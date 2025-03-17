@@ -6,12 +6,12 @@ class CheckoutProvider extends ChangeNotifier {
   String? errorMessage;
   Map<String, dynamic>? orderData;
 
-  /// Gọi API checkout để đặt hàng, truyền danh sách sản phẩm đã chọn
   Future<void> placeOrder({
     required String token,
     required int idDiaChi,
     required String phuongThucThanhToan,
     required List<Map<String, dynamic>> selectedItems,
+    String? message,
   }) async {
     isLoading = true;
     errorMessage = null;
@@ -24,6 +24,7 @@ class CheckoutProvider extends ChangeNotifier {
         idDiaChi: idDiaChi,
         phuongThucThanhToan: phuongThucThanhToan,
         selectedItems: selectedItems,
+        message: message,
       );
 
       if (response.containsKey('error')) {

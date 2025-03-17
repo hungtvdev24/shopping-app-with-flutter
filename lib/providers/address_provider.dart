@@ -48,5 +48,42 @@ class AddressProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Cập nhật địa chỉ
+  Future<void> updateAddress(String token, Address address) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final updatedAddr = await AddressService.updateAddress(token, address);
+      if (updatedAddr != null) {
+        final index = _addresses.indexWhere((addr) => addr.idDiaChi == address.idDiaChi);
+        if (index != -1) {
+          _addresses[index] = updatedAddr;
+        }
+      } else {
+        _errorMessage = "Không thể cập nhật địa chỉ";
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi khi cập nhật địa chỉ: $e";
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
   // Xóa địa chỉ
+  Future<void> removeAddress(String token, int idDiaChi) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await AddressService.removeAddress(token, idDiaChi);
+      _addresses.removeWhere((addr) => addr.idDiaChi == idDiaChi);
+    } catch (e) {
+      _errorMessage = "Lỗi khi xóa địa chỉ: $e";
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
 }
