@@ -31,7 +31,9 @@ class ProfileScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    userProvider.errorMessage ?? "Không thể tải thông tin người dùng",
+                    // Xử lý errorMessage dưới dạng Map
+                    userProvider.errorMessage?['general']?.toString() ??
+                        "Không thể tải thông tin người dùng",
                     style: const TextStyle(color: Colors.red, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
@@ -92,8 +94,8 @@ class ProfileScreen extends StatelessWidget {
   // 1) HEADER
   // --------------------------------------------------------------------------
   Widget _buildProfileHeader(BuildContext context, Map<String, dynamic> userData) {
-    final String userName = userData['name'] ?? "Người dùng";
-    final String userEmail = userData['email'] ?? "email@unknown.com";
+    final String userName = userData['name']?.toString() ?? "Người dùng";
+    final String userEmail = userData['email']?.toString() ?? "email@unknown.com";
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -132,37 +134,36 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // Tên, email
+          // Tên, email (có thể bấm để chỉnh sửa)
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Hi, $userName",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            child: GestureDetector(
+              onTap: () {
+                // Khi bấm vào tên, chuyển hướng sang màn hình chỉnh sửa
+                Navigator.pushNamed(context, AppRoutes.editProfile);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Hi, $userName",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  userEmail,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                  const SizedBox(height: 4),
+                  Text(
+                    userEmail,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-
-          // Icon mũi tên
-          IconButton(
-            onPressed: () {
-              // Mở trang cài đặt / chỉnh sửa hồ sơ (nếu có)
-            },
-            icon: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ),
+          // Xóa nút chỉnh sửa (biểu tượng bút)
         ],
       ),
     );

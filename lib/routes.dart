@@ -10,6 +10,7 @@ import 'screens/splash/splash_screen.dart';
 import 'screens/splash/slide_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/profile/address_list_screen.dart';
+import 'screens/profile/edit_profile_screen.dart'; // Đã import đúng
 import 'screens/product/search_screen.dart';
 import 'screens/product/notification_screen.dart';
 
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String otp = '/otp';
   static const String home = '/main';
   static const String addressList = '/address-list';
+  static const String editProfile = '/edit-profile'; // Thêm route cho EditProfileScreen
   static const String order = '/order-list';
   static const String search = '/search';
   static const String notification = '/notification';
@@ -40,9 +42,9 @@ Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.otp: (context) => const OtpScreen(),
   AppRoutes.home: (context) => const MainScreen(),
   AppRoutes.addressList: (context) => const AddressListScreen(),
+  AppRoutes.editProfile: (context) => const EditProfileScreen(), // Thêm route cho EditProfileScreen
   AppRoutes.search: (context) => const SearchScreen(),
   AppRoutes.notification: (context) => const NotificationScreen(),
-
   // Màn hình xem đơn hàng của tôi
   AppRoutes.order: (context) => const MyOrdersScreen(),
 };

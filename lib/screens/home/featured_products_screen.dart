@@ -43,9 +43,9 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
         // Giao diện chính
         return Scaffold(
           appBar: AppBar(
-            title: const Text("Sản phẩm yêu thích"),
+            title: const Text(""), // Tiêu đề rỗng
           ),
-          backgroundColor: Colors.white, // Đồng bộ với HomeScreen
+          backgroundColor: Colors.white,
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,18 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                       if (favoriteProvider.isLoading)
                         const Center(child: CircularProgressIndicator())
                       else if (favoriteProvider.errorMessage != null)
-                        Column(
+                        favoriteProvider.errorMessage!.contains("404")
+                            ? const Center(
+                          child: Text(
+                            "Chưa có sản phẩm nào",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        )
+                            : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
@@ -79,12 +90,14 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                           ],
                         )
                       else if (favoriteProvider.favorites.isEmpty)
-                          const Text(
-                            "Bạn chưa có sản phẩm yêu thích nào",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                          const Center(
+                            child: Text(
+                              "Chưa có sản phẩm nào",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
                           )
                         else
@@ -93,14 +106,19 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: favoriteProvider.favorites.length,
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2, // 2 sản phẩm trên mỗi hàng
+                              crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
                               childAspectRatio: 0.75,
                             ),
                             itemBuilder: (context, index) {
-                              final product = favoriteProvider.favorites[index];
-                              return _buildProductCard(product, isFavorite: true);
+                              final favorite = favoriteProvider.favorites[index];
+                              // Tìm sản phẩm gốc từ ProductProvider dựa trên id_sanPham
+                              final product = productProvider.products.firstWhere(
+                                    (prod) => prod['id_sanPham'] == favorite['id_sanPham'],
+                                orElse: () => favorite, // Nếu không tìm thấy, dùng dữ liệu từ favorite
+                              );
+                              return _buildProductCard(context, product, isFavorite: true);
                             },
                           ),
                     ],
@@ -125,7 +143,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Gợi ý cho bạn",
+            "Sản phẩm khác",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -154,19 +172,24 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
             )
           else if (productProvider.products.isEmpty)
               const Text(
-                "Không có sản phẩm gợi ý nào",
+                "Không có sản phẩm nào",
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               )
             else
-              SizedBox(
-                height: 220,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: productProvider.products.length,
-                  itemBuilder: (context, index) {
-                    return _buildProductCard(productProvider.products[index], isFavorite: false);
-                  },
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: productProvider.products.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.75,
                 ),
+                itemBuilder: (context, index) {
+                  final product = productProvider.products[index];
+                  return _buildProductCard(context, product, isFavorite: false);
+                },
               ),
         ],
       ),
@@ -174,16 +197,21 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
   }
 
   // **Widget hiển thị thẻ sản phẩm**
-  Widget _buildProductCard(dynamic product, {required bool isFavorite}) {
+  Widget _buildProductCard(BuildContext context, dynamic product, {required bool isFavorite}) {
     final formatCurrency = NumberFormat("#,###", "vi_VN");
 
+    // In URL để debug
+    print("Image URL for product ${product['tenSanPham']}: ${product['urlHinhAnh']}");
+
     // Lấy dữ liệu sản phẩm
-    final imageUrl = product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png";
+    final imageUrl = product['urlHinhAnh']?.toString().startsWith('http') == true
+        ? product['urlHinhAnh']
+        : "http://10.0.3.2:8001/images/default.png"; // Thay 10.0.3.2 bằng IP của bạn nếu cần
     final thuongHieu = product['thuongHieu'] ?? "Không có thương hiệu";
     final tenSanPham = product['tenSanPham'] ?? "Không có tên";
     final double originalPrice = double.tryParse(product['gia'].toString()) ?? 0.0;
 
-    // Giả lập giảm giá (có thể thay đổi logic theo thực tế)
+    // Giả lập giảm giá
     const bool hasDiscount = true;
     const double discountPercent = 20;
     final double discountedPrice = originalPrice * (1 - discountPercent / 100);
@@ -201,7 +229,6 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
         );
       },
       child: Container(
-        width: 150,
         margin: const EdgeInsets.only(right: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,6 +247,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
+                      print("Error loading image for ${product['tenSanPham']}: $error");
                       return Container(
                         height: 120,
                         color: Colors.grey[300],
