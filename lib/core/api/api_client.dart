@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = "http://10.0.3.2:8001/api"; // Địa chỉ cho Genymotion
+  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api"; // Cập nhật URL ngrok
 
   // Phương thức POST
   static Future<Map<String, dynamic>> postData(String url, Map<String, dynamic> data, {String? token}) async {
@@ -11,6 +11,7 @@ class ApiClient {
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -54,6 +55,7 @@ class ApiClient {
     try {
       final headers = {
         "Accept": "application/json",
+        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -94,6 +96,7 @@ class ApiClient {
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -137,6 +140,7 @@ class ApiClient {
     try {
       final headers = {
         "Accept": "application/json",
+        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";

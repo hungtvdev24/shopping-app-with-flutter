@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String baseUrl = "http://10.0.3.2:8001/api"; // Địa chỉ API cho Genymotion
+  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api"; // Cập nhật URL ngrok
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     return await _postData('login', {"email": email, "password": password});
@@ -21,7 +21,10 @@ class AuthService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/$endpoint'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
+        },
         body: jsonEncode(data),
       ).timeout(const Duration(seconds: 10));
 
