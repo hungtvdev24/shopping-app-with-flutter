@@ -10,7 +10,9 @@ import 'providers/address_provider.dart';
 import 'providers/checkout_provider.dart';
 import 'providers/myorder_provider.dart';
 import 'providers/favorite_product_provider.dart';
-import 'providers/category_provider.dart'; // Thêm CategoryProvider
+import 'providers/category_provider.dart';
+import 'providers/notification_provider.dart';
+import 'providers/recent_products_provider.dart'; // Thêm RecentProductsProvider
 
 // Import file routes
 import 'routes.dart';
@@ -30,7 +32,9 @@ void main() {
         ChangeNotifierProvider(create: (context) => CheckoutProvider()),
         ChangeNotifierProvider(create: (context) => MyOrderProvider()),
         ChangeNotifierProvider(create: (context) => FavoriteProductProvider()),
-        ChangeNotifierProvider(create: (context) => CategoryProvider()), // Thêm CategoryProvider
+        ChangeNotifierProvider(create: (context) => CategoryProvider()),
+        ChangeNotifierProvider(create: (context) => NotificationProvider()),
+        ChangeNotifierProvider(create: (context) => RecentProductsProvider()), // Thêm RecentProductsProvider
       ],
       child: const MyApp(),
     ),

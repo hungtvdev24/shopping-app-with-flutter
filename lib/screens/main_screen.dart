@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../routes.dart';
-import '../providers/category_provider.dart'; // Thêm CategoryProvider
+import '../providers/category_provider.dart';
+import '../providers/notification_provider.dart'; // Thêm NotificationProvider
+import '../core/api/auth_service.dart'; // Để lấy token
 
 // Các màn hình con
-
 import 'home/home_screen.dart';
 import 'home/filter_screen.dart';
 import 'home/featured_products_screen.dart';
@@ -28,6 +29,15 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     // Tải danh mục khi khởi tạo MainScreen
     Provider.of<CategoryProvider>(context, listen: false).loadCategories();
+
+    // Tải thông báo khi khởi tạo MainScreen
+    final authService = AuthService();
+    authService.getToken().then((token) {
+      if (token != null) {
+        Provider.of<NotificationProvider>(context, listen: false)
+            .fetchNotifications(token);
+      }
+    });
   }
 
   @override
@@ -74,10 +84,47 @@ class _MainScreenState extends State<MainScreen> {
               Navigator.pushNamed(context, AppRoutes.search);
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black, size: 28),
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.notification);
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              // Đếm số thông báo chưa đọc
+              final unreadCount = notificationProvider.notifications
+                  .where((notification) => !notification.isRead)
+                  .length;
+
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none,
+                      color: Colors.black,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.notification);
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
             },
           ),
         ],

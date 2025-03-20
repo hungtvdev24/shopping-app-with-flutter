@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.1.0
+  share_plus: ^7.2.2
   cached_network_image: ^3.3.1
   http: ^1.2.2
   shared_preferences: ^2.4.2
@@ -22,6 +23,9 @@ dependencies:
   vm_service: ^14.3.1
   iconsax: ^0.0.8
   cupertino_icons: ^1.0.8
+
+
+
 
 dev_dependencies:
   flutter_test:

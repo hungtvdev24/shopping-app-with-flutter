@@ -93,20 +93,34 @@ class _AddressListScreenState extends State<AddressListScreen> {
           ? Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            addressProvider.errorMessage!,
-            style: const TextStyle(color: Colors.red, fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      )
-          : addresses.isEmpty
-          ? const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            "Chưa có địa chỉ nào",
-            style: TextStyle(color: Colors.grey, fontSize: 18),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                addressProvider.errorMessage!,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  final userProvider = Provider.of<UserProvider>(context, listen: false);
+                  final token = userProvider.token;
+                  if (token != null) {
+                    addressProvider.fetchAddresses(token);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text(
+                  "Thử lại",
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ],
           ),
         ),
       )
@@ -115,7 +129,30 @@ class _AddressListScreenState extends State<AddressListScreen> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
+              child: addresses.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.location_off,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Chưa có địa chỉ nào",
+                      style: TextStyle(color: Colors.grey, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Hãy thêm địa chỉ để bắt đầu mua sắm!",
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
+                ),
+              )
+                  : ListView.builder(
                 itemCount: addresses.length,
                 itemBuilder: (context, index) {
                   final addr = addresses[index];

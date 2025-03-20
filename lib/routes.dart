@@ -13,7 +13,10 @@ import 'screens/profile/address_list_screen.dart';
 import 'screens/profile/edit_profile_screen.dart';
 import 'screens/product/search_screen.dart';
 import 'screens/product/notification_screen.dart';
-import 'screens/product/category_detail_screen.dart'; // Thêm CategoryDetailScreen
+import 'screens/product/category_detail_screen.dart';
+import 'screens/product/share_screen.dart';
+import 'screens/product/recent_history_screen.dart';
+import 'screens/product/product_detail_screen.dart';
 import 'screens/order/order_screen.dart';
 
 class AppRoutes {
@@ -29,8 +32,10 @@ class AppRoutes {
   static const String order = '/order-list';
   static const String search = '/search';
   static const String notification = '/notification';
-  static const String categoryDetail = '/category-detail'; // Thêm route cho CategoryDetailScreen
-  static const String share = '/share'; // Thêm route cho ShareScreen
+  static const String categoryDetail = '/category-detail';
+  static const String share = '/share';
+  static const String recentHistory = '/recent-history';
+  static const String productDetail = '/product-detail';
 }
 
 Map<String, WidgetBuilder> appRoutes = {
@@ -52,5 +57,18 @@ Map<String, WidgetBuilder> appRoutes = {
       categoryId: args['categoryId'],
       categoryName: args['categoryName'],
     );
+  },
+  AppRoutes.share: (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    return ShareScreen(
+      title: args?['title'] as String?,
+      content: args?['content'] as String?,
+      url: args?['url'] as String?,
+    );
+  },
+  AppRoutes.recentHistory: (context) => const RecentHistoryScreen(),
+  AppRoutes.productDetail: (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    return ProductDetailScreen(product: args);
   },
 };

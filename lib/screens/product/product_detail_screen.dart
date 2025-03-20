@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Để format tiền tệ
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorite_product_provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/recent_products_provider.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -71,6 +72,19 @@ class ProductDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png";
     final productProvider = Provider.of<ProductProvider>(context);
+
+    // Thêm sản phẩm vào lịch sử xem gần đây
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final recentProductsProvider = Provider.of<RecentProductsProvider>(context, listen: false);
+      recentProductsProvider.addRecentProduct(
+        RecentProduct(
+          id: product['id_sanPham'] as int,
+          name: product['tenSanPham'] ?? "Không có tên",
+          image: product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png",
+          price: double.tryParse(product['gia'].toString()) ?? 0.0,
+        ),
+      );
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -229,7 +243,6 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Phần gợi ý sản phẩm tương tự
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -254,7 +267,6 @@ class ProductDetailScreen extends StatelessWidget {
                         );
                       }
 
-                      // Lọc sản phẩm tương tự dựa trên danh mục
                       final suggestedProducts = productProvider.products
                           .where((prod) =>
                       prod['id_danhMuc'] == product['id_danhMuc'] &&

@@ -4,6 +4,8 @@ import '../../providers/address_provider.dart';
 import '../../providers/checkout_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../core/models/address.dart';
+import '../../routes.dart';
+import 'package:intl/intl.dart'; // Để format tiền tệ
 
 class CheckoutScreen extends StatefulWidget {
   final List<Map<String, dynamic>> selectedItems;
@@ -39,6 +41,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             });
           }
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng đăng nhập để tiếp tục!')),
+        );
       }
     });
   }
@@ -54,6 +60,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final checkoutProvider = Provider.of<CheckoutProvider>(context);
     final addressProvider = Provider.of<AddressProvider>(context);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final formatCurrency = NumberFormat("#,###", "vi_VN");
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -89,16 +96,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/address').then((_) {
+                          Navigator.pushNamed(context, AppRoutes.addressList).then((_) {
                             final token = userProvider.token;
                             if (token != null) {
-                              addressProvider.fetchAddresses(token);
+                              addressProvider.fetchAddresses(token).then((_) {
+                                if (addressProvider.addresses.isNotEmpty && selectedAddress == null) {
+                                  setState(() {
+                                    selectedAddress = addressProvider.addresses[0];
+                                  });
+                                }
+                              });
                             }
                           });
                         },
-                        child: const Text(
-                          'Xem tất cả',
-                          style: TextStyle(color: Colors.blue),
+                        child: Text(
+                          addressProvider.addresses.isEmpty ? 'Thêm địa chỉ' : 'Xem tất cả',
+                          style: const TextStyle(color: Colors.blue),
                         ),
                       ),
                     ],
@@ -106,41 +119,72 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   const SizedBox(height: 8),
                   if (addressProvider.addresses.isEmpty)
                     const Text(
-                      'Chưa có địa chỉ nào, vui lòng thêm địa chỉ!',
+                      'Chưa có địa chỉ nào, vui lòng thêm địa chỉ để tiếp tục!',
                       style: TextStyle(color: Colors.grey),
                     )
                   else
                     Column(
-                      children: addressProvider.addresses.map((addr) {
-                        return RadioListTile<Address>(
-                          value: addr,
-                          groupValue: selectedAddress,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedAddress = value;
-                            });
-                          },
-                          title: Text(
-                            addr.tenNguoiNhan ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                      children: [
+                        ...addressProvider.addresses.map((addr) {
+                          return RadioListTile<Address>(
+                            value: addr,
+                            groupValue: selectedAddress,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedAddress = value;
+                              });
+                            },
+                            title: Text(
+                              addr.tenNguoiNhan ?? '',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${addr.tenNha ?? ''}, ${addr.xa ?? ''}, ${addr.huyen ?? ''}, ${addr.tinh ?? ''}",
+                                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                                ),
+                                Text(
+                                  "SDT: ${addr.sdtNhanHang ?? ''}",
+                                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            activeColor: Colors.blue,
+                            controlAffinity: ListTileControlAffinity.leading,
+                          );
+                        }).toList(),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRoutes.addressList).then((_) {
+                                final token = userProvider.token;
+                                if (token != null) {
+                                  addressProvider.fetchAddresses(token).then((_) {
+                                    if (addressProvider.addresses.isNotEmpty && selectedAddress == null) {
+                                      setState(() {
+                                        selectedAddress = addressProvider.addresses[0];
+                                      });
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.blue),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Text(
+                              'Thêm địa chỉ mới',
+                              style: TextStyle(color: Colors.blue, fontSize: 14),
+                            ),
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${addr.tenNha ?? ''}, ${addr.xa ?? ''}, ${addr.huyen ?? ''}, ${addr.tinh ?? ''}",
-                                style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                              ),
-                              Text(
-                                "SDT: ${addr.sdtNhanHang ?? ''}",
-                                style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                              ),
-                            ],
-                          ),
-                          activeColor: Colors.blue,
-                          controlAffinity: ListTileControlAffinity.leading,
-                        );
-                      }).toList(),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -165,11 +209,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Image.network(
-                            item['image'] ?? 'https://via.placeholder.com/50',
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              item['image'] ?? 'https://via.placeholder.com/50',
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 50,
+                                height: 50,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.error, color: Colors.grey),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -179,18 +232,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 Text(
                                   item['tenSanPham'] ?? 'Tên sản phẩm',
                                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
+                                const SizedBox(height: 4),
                                 Text(
-                                  "Bảo vệ sản phẩm được bảo hiểm khi thiết hại xảy ra do sự bất ngờ, tiếp xúc với chất lỏng hoặc hư hỏng trong quá trình sử dụng. Tìm hiểu thêm",
+                                  "Bảo vệ sản phẩm được bảo hiểm khi thiết hại xảy ra do sự bất ngờ, tiếp xúc với chất lỏng hoặc hư hỏng trong quá trình sử dụng.",
                                   style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      "đ${item['giaTien'] ?? 0}",
-                                      style: const TextStyle(fontSize: 14, color: Colors.black),
+                                      "${formatCurrency.format(double.tryParse(item['giaTien'].toString()) ?? 0)} ₫",
+                                      style: const TextStyle(fontSize: 14, color: Colors.black, fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       "x${item['soLuong'] ?? 1}",
@@ -224,11 +282,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _messageController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Ghi chú đơn hàng (nếu có)',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Colors.grey[50],
                     ),
                     maxLines: 3,
                   ),
@@ -236,7 +297,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
 
-            // Phần phương thức thanh toán (giữ nguyên như cũ)
+            // Phần phương thức thanh toán
             Container(
               color: Colors.white,
               padding: const EdgeInsets.all(16.0),
@@ -248,6 +309,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     'Chọn Phương Thức Thanh Toán',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 8),
                   RadioListTile<String>(
                     title: const Text('Thanh toán khi nhận hàng (COD)'),
                     value: 'COD',
@@ -257,6 +319,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         paymentMethod = value ?? 'COD';
                       });
                     },
+                    activeColor: Colors.blue,
                   ),
                   RadioListTile<String>(
                     title: const Text('Thanh toán bằng VN Pay'),
@@ -267,6 +330,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         paymentMethod = value ?? 'VN_PAY';
                       });
                     },
+                    activeColor: Colors.blue,
                   ),
                 ],
               ),
@@ -287,7 +351,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'đ${widget.totalPrice}',
+                        "${formatCurrency.format(widget.totalPrice)} ₫",
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
                       ),
                     ],
@@ -301,7 +365,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       Text(
-                        'đ${(widget.totalPrice * 0.1).toStringAsFixed(0)}', // Giả định tiết kiệm 10%
+                        "${formatCurrency.format(widget.totalPrice * 0.1)} ₫", // Giả định tiết kiệm 10%
                         style: const TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                     ],
@@ -343,12 +407,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     if (checkoutProvider.errorMessage != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(checkoutProvider.errorMessage!)),
+                        SnackBar(
+                          content: Text(checkoutProvider.errorMessage!),
+                          backgroundColor: Colors.red,
+                        ),
                       );
                     } else {
                       final msg = checkoutProvider.orderData?['message'] ?? 'Đặt hàng thành công!';
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(msg)),
+                        SnackBar(
+                          content: Text(msg),
+                          backgroundColor: Colors.green,
+                        ),
                       );
                       Navigator.pop(context, true);
                     }
@@ -368,90 +438,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAddressSection() {
-    final addressProvider = Provider.of<AddressProvider>(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Chọn Địa Chỉ Giao Hàng',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        if (addressProvider.addresses.isEmpty)
-          const Text(
-            'Chưa có địa chỉ nào, vui lòng thêm địa chỉ!',
-            style: TextStyle(color: Colors.grey),
-          )
-        else
-          Column(
-            children: addressProvider.addresses.map((addr) {
-              return RadioListTile<Address>(
-                value: addr,
-                groupValue: selectedAddress,
-                onChanged: (value) {
-                  setState(() {
-                    selectedAddress = value;
-                  });
-                },
-                title: Text(
-                  addr.tenNguoiNhan ?? '',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${addr.tenNha ?? ''}, ${addr.xa ?? ''}, ${addr.huyen ?? ''}, ${addr.tinh ?? ''}",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                    ),
-                    Text(
-                      "SDT: ${addr.sdtNhanHang ?? ''}",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                    ),
-                  ],
-                ),
-                activeColor: Colors.blue,
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            }).toList(),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildPaymentMethodSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Chọn Phương Thức Thanh Toán',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        RadioListTile<String>(
-          title: const Text('Thanh toán khi nhận hàng (COD)'),
-          value: 'COD',
-          groupValue: paymentMethod,
-          onChanged: (value) {
-            setState(() {
-              paymentMethod = value ?? 'COD';
-            });
-          },
-        ),
-        RadioListTile<String>(
-          title: const Text('Thanh toán bằng VN Pay'),
-          value: 'VN_PAY',
-          groupValue: paymentMethod,
-          onChanged: (value) {
-            setState(() {
-              paymentMethod = value ?? 'VN_PAY';
-            });
-          },
-        ),
-      ],
     );
   }
 }

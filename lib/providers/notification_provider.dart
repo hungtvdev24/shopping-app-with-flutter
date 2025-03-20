@@ -49,4 +49,9 @@ class NotificationProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Làm mới danh sách thông báo
+  Future<void> refreshNotifications(String token) async {
+    await fetchNotifications(token);
+  }
 }

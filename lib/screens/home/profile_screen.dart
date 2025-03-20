@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../providers/user_provider.dart';
+import '../../providers/recent_products_provider.dart';
 import '../../routes.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,14 +12,12 @@ class ProfileScreen extends StatelessWidget {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         if (userProvider.isLoading) {
-          // Màn hình chờ load
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
         if (userProvider.errorMessage != null || userProvider.userData == null) {
-          // Màn hình lỗi
           return Scaffold(
             appBar: AppBar(
               title: const Text("Hồ sơ của tôi"),
@@ -31,7 +29,6 @@ class ProfileScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    // Xử lý errorMessage dưới dạng Map
                     userProvider.errorMessage?['general']?.toString() ??
                         "Không thể tải thông tin người dùng",
                     style: const TextStyle(color: Colors.red, fontSize: 16),
@@ -48,7 +45,6 @@ class ProfileScreen extends StatelessWidget {
           );
         }
 
-        // Nếu không lỗi, không loading => đã có userData
         final userData = userProvider.userData!;
 
         return Scaffold(
@@ -57,29 +53,14 @@ class ProfileScreen extends StatelessWidget {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  // 1) Header
                   _buildProfileHeader(context, userData),
-
-                  // 2) Thẻ "Starter Plan"
                   _buildPlanCard(),
-
-                  // 3) Voucher
                   _buildVoucherSection(),
-
-                  // 4) Tiêu đề "Tài khoản"
                   _buildSectionTitle("Tài khoản"),
-
-                  // 5) Danh sách chức năng
                   _buildProfileOptions(context),
-
-                  // 6) Lịch sử xem
-                  _buildHistorySection(),
-
+                  _buildHistorySection(context),
                   const SizedBox(height: 20),
-
-                  // 7) Đăng xuất
                   _buildLogoutButton(context, userProvider),
-
                   const SizedBox(height: 20),
                 ],
               ),
@@ -90,9 +71,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 1) HEADER
-  // --------------------------------------------------------------------------
   Widget _buildProfileHeader(BuildContext context, Map<String, dynamic> userData) {
     final String userName = userData['name']?.toString() ?? "Người dùng";
     final String userEmail = userData['email']?.toString() ?? "email@unknown.com";
@@ -115,7 +93,6 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar
           ClipRRect(
             borderRadius: BorderRadius.circular(40),
             child: SizedBox(
@@ -133,12 +110,9 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-
-          // Tên, email (có thể bấm để chỉnh sửa)
           Expanded(
             child: GestureDetector(
               onTap: () {
-                // Khi bấm vào tên, chuyển hướng sang màn hình chỉnh sửa
                 Navigator.pushNamed(context, AppRoutes.editProfile);
               },
               child: Column(
@@ -163,15 +137,11 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Xóa nút chỉnh sửa (biểu tượng bút)
         ],
       ),
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 2) PLAN CARD
-  // --------------------------------------------------------------------------
   Widget _buildPlanCard() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -186,7 +156,6 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Thông tin Plan
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,16 +185,13 @@ class ProfileScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {
-                    // Logic nâng cấp gói
-                  },
+                  onPressed: () {},
                   child: const Text("Upgrade"),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          // Ảnh minh họa
           Image.asset(
             "assets/upgrade_illustration.png",
             width: 60,
@@ -242,9 +208,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 3) VOUCHER SECTION
-  // --------------------------------------------------------------------------
   Widget _buildVoucherSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -287,9 +250,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 4) TIÊU ĐỀ PHẦN "TÀI KHOẢN"
-  // --------------------------------------------------------------------------
   Widget _buildSectionTitle(String title) {
     return Container(
       alignment: Alignment.centerLeft,
@@ -305,9 +265,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 5) DANH SÁCH CHỨC NĂNG
-  // --------------------------------------------------------------------------
   Widget _buildProfileOptions(BuildContext context) {
     return Column(
       children: [
@@ -315,23 +272,18 @@ class ProfileScreen extends StatelessWidget {
           Icons.shopping_bag,
           "Đơn hàng của tôi",
               () {
-            // Khi bấm => sang MyOrdersScreen
             Navigator.pushNamed(context, AppRoutes.order);
           },
         ),
         _buildProfileOption(
           Icons.autorenew,
           "Trả hàng (Returns)",
-              () {
-            // Mở trang trả hàng
-          },
+              () {},
         ),
         _buildProfileOption(
           Icons.favorite,
           "Sản phẩm yêu thích",
-              () {
-            // Mở danh sách yêu thích
-          },
+              () {},
         ),
         _buildProfileOption(
           Icons.location_on,
@@ -343,16 +295,12 @@ class ProfileScreen extends StatelessWidget {
         _buildProfileOption(
           Icons.payment,
           "Phương thức thanh toán",
-              () {
-            // Mở cài đặt thanh toán
-          },
+              () {},
         ),
         _buildProfileOption(
           Icons.settings,
           "Cài đặt",
-              () {
-            // Mở trang cài đặt
-          },
+              () {},
         ),
       ],
     );
@@ -381,69 +329,123 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 6) LỊCH SỬ XEM GẦN ĐÂY
-  // --------------------------------------------------------------------------
-  Widget _buildHistorySection() {
-    final List<Map<String, String>> historyItems = [
-      {"image": "assets/anh1.png", "name": "Áo sơ mi nam trắng"},
-      {"image": "assets/anh2.png", "name": "Áo thun nam cổ tròn"},
-      {"image": "assets/anh3.png", "name": "Áo hoodie basic"},
-      {"image": "assets/anh4.png", "name": "Quần jeans nam cao cấp"},
-    ];
+  Widget _buildHistorySection(BuildContext context) {
+    return Consumer<RecentProductsProvider>(
+      builder: (context, recentProductsProvider, child) {
+        final recentProducts = recentProductsProvider.recentProducts;
+        // Chỉ lấy tối đa 4 sản phẩm
+        final displayedProducts = recentProducts.length > 4 ? recentProducts.sublist(0, 4) : recentProducts;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12.withOpacity(0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Lịch sử xem gần đây",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          Column(
-            children: historyItems.map((item) {
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    item["image"]!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Lịch sử xem gần đây",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  if (recentProducts.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        recentProductsProvider.clearRecentProducts();
+                      },
+                      child: const Text(
+                        "Xóa lịch sử",
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              recentProducts.isEmpty
+                  ? const Center(
+                child: Text(
+                  "Bạn chưa xem sản phẩm nào.",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+                  : Column(
+                children: displayedProducts.map((product) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        product.image,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.error),
+                      ),
+                    ),
+                    title: Text(product.name),
+                    subtitle: Text(
+                      "${product.price.toStringAsFixed(0)} VNĐ",
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    onTap: () {
+                      // Điều hướng đến màn hình chi tiết sản phẩm
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.productDetail,
+                        arguments: {
+                          'id_sanPham': product.id,
+                          'tenSanPham': product.name,
+                          'urlHinhAnh': product.image,
+                          'gia': product.price,
+                          'thuongHieu': "Thương hiệu", // Thêm thông tin nếu cần
+                          'moTa': "Mô tả sản phẩm", // Thêm thông tin nếu cần
+                          'soSaoDanhGia': 4.5, // Thêm thông tin nếu cần
+                          'id_danhMuc': 1, // Thêm thông tin nếu cần
+                        },
+                      );
+                    },
+                  );
+                }).toList(),
+              ),
+              if (recentProducts.length > 4) // Hiển thị nút "All" nếu có hơn 4 sản phẩm
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      // Điều hướng đến màn hình lịch sử đầy đủ
+                      Navigator.pushNamed(context, AppRoutes.recentHistory);
+                    },
+                    child: const Text(
+                      "All",
+                      style: TextStyle(color: Colors.blueAccent),
+                    ),
                   ),
                 ),
-                title: Text(item["name"]!),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                onTap: () {
-                  // Mở chi tiết sản phẩm đã xem
-                },
-              );
-            }).toList(),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  // --------------------------------------------------------------------------
-  // 7) NÚT ĐĂNG XUẤT
-  // --------------------------------------------------------------------------
   Widget _buildLogoutButton(BuildContext context, UserProvider userProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
