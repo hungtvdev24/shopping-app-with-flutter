@@ -9,9 +9,8 @@ import 'providers/cart_provider.dart';
 import 'providers/address_provider.dart';
 import 'providers/checkout_provider.dart';
 import 'providers/myorder_provider.dart';
-
-// Thêm import cho FavoriteProductProvider
 import 'providers/favorite_product_provider.dart';
+import 'providers/category_provider.dart'; // Thêm CategoryProvider
 
 // Import file routes
 import 'routes.dart';
@@ -30,9 +29,8 @@ void main() {
         ChangeNotifierProvider(create: (context) => AddressProvider()),
         ChangeNotifierProvider(create: (context) => CheckoutProvider()),
         ChangeNotifierProvider(create: (context) => MyOrderProvider()),
-
-        // Đăng ký FavoriteProductProvider ở đây:
         ChangeNotifierProvider(create: (context) => FavoriteProductProvider()),
+        ChangeNotifierProvider(create: (context) => CategoryProvider()), // Thêm CategoryProvider
       ],
       child: const MyApp(),
     ),
@@ -48,8 +46,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Ứng dụng bán hàng',
       theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: AppRoutes.splash, // Hoặc route bạn muốn
-      routes: appRoutes, // Map các route
+      initialRoute: AppRoutes.splash,
+      routes: appRoutes,
       navigatorObservers: [
         routeObserver,
       ],

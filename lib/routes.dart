@@ -10,11 +10,10 @@ import 'screens/splash/splash_screen.dart';
 import 'screens/splash/slide_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/profile/address_list_screen.dart';
-import 'screens/profile/edit_profile_screen.dart'; // Đã import đúng
+import 'screens/profile/edit_profile_screen.dart';
 import 'screens/product/search_screen.dart';
 import 'screens/product/notification_screen.dart';
-
-// Màn hình đơn hàng (MyOrdersScreen)
+import 'screens/product/category_detail_screen.dart'; // Thêm CategoryDetailScreen
 import 'screens/order/order_screen.dart';
 
 class AppRoutes {
@@ -26,11 +25,12 @@ class AppRoutes {
   static const String otp = '/otp';
   static const String home = '/main';
   static const String addressList = '/address-list';
-  static const String editProfile = '/edit-profile'; // Thêm route cho EditProfileScreen
+  static const String editProfile = '/edit-profile';
   static const String order = '/order-list';
   static const String search = '/search';
   static const String notification = '/notification';
-// Nếu cần route chi tiết order => '/order-detail', ...
+  static const String categoryDetail = '/category-detail'; // Thêm route cho CategoryDetailScreen
+  static const String share = '/share'; // Thêm route cho ShareScreen
 }
 
 Map<String, WidgetBuilder> appRoutes = {
@@ -42,9 +42,15 @@ Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.otp: (context) => const OtpScreen(),
   AppRoutes.home: (context) => const MainScreen(),
   AppRoutes.addressList: (context) => const AddressListScreen(),
-  AppRoutes.editProfile: (context) => const EditProfileScreen(), // Thêm route cho EditProfileScreen
+  AppRoutes.editProfile: (context) => const EditProfileScreen(),
   AppRoutes.search: (context) => const SearchScreen(),
   AppRoutes.notification: (context) => const NotificationScreen(),
-  // Màn hình xem đơn hàng của tôi
   AppRoutes.order: (context) => const MyOrdersScreen(),
+  AppRoutes.categoryDetail: (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    return CategoryDetailScreen(
+      categoryId: args['categoryId'],
+      categoryName: args['categoryName'],
+    );
+  },
 };

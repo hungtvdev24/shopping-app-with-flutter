@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api"; // Cập nhật URL ngrok
+  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api";
 
   // Phương thức POST
   static Future<Map<String, dynamic>> postData(String url, Map<String, dynamic> data, {String? token}) async {
@@ -11,7 +11,7 @@ class ApiClient {
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
+        "ngrok-skip-browser-warning": "true",
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -31,22 +31,23 @@ class ApiClient {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 401) {
-        return {"error": "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."};
+        throw Exception("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
       } else if (response.statusCode == 400) {
-        return {"error": jsonDecode(response.body)["message"] ?? "Yêu cầu không hợp lệ."};
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody["message"] ?? "Yêu cầu không hợp lệ.");
+      } else if (response.statusCode == 500) {
+        throw Exception("Lỗi server: ${response.statusCode} - ${response.body}");
       } else {
-        return {
-          "error": "Lỗi không xác định: ${response.statusCode} - ${jsonDecode(response.body)["message"] ?? response.body}",
-        };
+        throw Exception("Lỗi không xác định: ${response.statusCode} - ${response.body}");
       }
     } on TimeoutException {
-      return {"error": "Kết nối đến server quá lâu. Vui lòng thử lại."};
+      throw Exception("Kết nối đến server quá lâu. Vui lòng thử lại.");
     } on FormatException {
-      return {"error": "Dữ liệu từ server không đúng định dạng."};
+      throw Exception("Dữ liệu từ server không đúng định dạng.");
     } on http.ClientException {
-      return {"error": "Không thể kết nối đến server. Kiểm tra API hoặc mạng."};
+      throw Exception("Không thể kết nối đến server. Kiểm tra API hoặc mạng.");
     } catch (e) {
-      return {"error": "Đã xảy ra lỗi không xác định: $e"};
+      throw Exception("Đã xảy ra lỗi không xác định: $e");
     }
   }
 
@@ -55,7 +56,7 @@ class ApiClient {
     try {
       final headers = {
         "Accept": "application/json",
-        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
+        "ngrok-skip-browser-warning": "true",
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -76,6 +77,8 @@ class ApiClient {
         throw Exception("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
       } else if (response.statusCode == 404) {
         throw Exception("Không tìm thấy dữ liệu: ${response.statusCode}");
+      } else if (response.statusCode == 500) {
+        throw Exception("Lỗi server: ${response.statusCode} - ${response.body}");
       } else {
         throw Exception('Failed to load data: ${response.statusCode} - ${response.body}');
       }
@@ -96,7 +99,7 @@ class ApiClient {
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
+        "ngrok-skip-browser-warning": "true",
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -116,22 +119,23 @@ class ApiClient {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 401) {
-        return {"error": "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."};
+        throw Exception("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
       } else if (response.statusCode == 400) {
-        return {"error": jsonDecode(response.body)["message"] ?? "Yêu cầu không hợp lệ."};
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody["message"] ?? "Yêu cầu không hợp lệ.");
+      } else if (response.statusCode == 500) {
+        throw Exception("Lỗi server: ${response.statusCode} - ${response.body}");
       } else {
-        return {
-          "error": "Lỗi không xác định: ${response.statusCode} - ${jsonDecode(response.body)["message"] ?? response.body}",
-        };
+        throw Exception("Lỗi không xác định: ${response.statusCode} - ${response.body}");
       }
     } on TimeoutException {
-      return {"error": "Kết nối đến server quá lâu. Vui lòng thử lại."};
+      throw Exception("Kết nối đến server quá lâu. Vui lòng thử lại.");
     } on FormatException {
-      return {"error": "Dữ liệu từ server không đúng định dạng."};
+      throw Exception("Dữ liệu từ server không đúng định dạng.");
     } on http.ClientException {
-      return {"error": "Không thể kết nối đến server. Kiểm tra API hoặc mạng."};
+      throw Exception("Không thể kết nối đến server. Kiểm tra API hoặc mạng.");
     } catch (e) {
-      return {"error": "Đã xảy ra lỗi không xác định: $e"};
+      throw Exception("Đã xảy ra lỗi không xác định: $e");
     }
   }
 
@@ -140,7 +144,7 @@ class ApiClient {
     try {
       final headers = {
         "Accept": "application/json",
-        "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
+        "ngrok-skip-browser-warning": "true",
       };
       if (token != null) {
         headers["Authorization"] = "Bearer $token";
@@ -158,22 +162,22 @@ class ApiClient {
       if (response.statusCode == 200) {
         return {"message": "Xóa thành công"};
       } else if (response.statusCode == 401) {
-        return {"error": "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."};
+        throw Exception("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
       } else if (response.statusCode == 404) {
-        return {"error": "Không tìm thấy dữ liệu để xóa: ${response.statusCode}"};
+        throw Exception("Không tìm thấy dữ liệu để xóa: ${response.statusCode}");
+      } else if (response.statusCode == 500) {
+        throw Exception("Lỗi server: ${response.statusCode} - ${response.body}");
       } else {
-        return {
-          "error": "Lỗi không xác định: ${response.statusCode} - ${jsonDecode(response.body)["message"] ?? response.body}",
-        };
+        throw Exception("Lỗi không xác định: ${response.statusCode} - ${response.body}");
       }
     } on TimeoutException {
-      return {"error": "Kết nối đến server quá lâu. Vui lòng thử lại."};
+      throw Exception("Kết nối đến server quá lâu. Vui lòng thử lại.");
     } on FormatException {
-      return {"error": "Dữ liệu từ server không đúng định dạng."};
+      throw Exception("Dữ liệu từ server không đúng định dạng.");
     } on http.ClientException {
-      return {"error": "Không thể kết nối đến server. Kiểm tra API hoặc mạng."};
+      throw Exception("Không thể kết nối đến server. Kiểm tra API hoặc mạng.");
     } catch (e) {
-      return {"error": "Đã xảy ra lỗi không xác định: $e"};
+      throw Exception("Đã xảy ra lỗi không xác định: $e");
     }
   }
 }

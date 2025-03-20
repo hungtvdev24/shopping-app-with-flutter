@@ -1,20 +1,32 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api"; // Cập nhật URL ngrok
+  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api";
+  static const String _tokenKey = 'auth_token';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    return await _postData('login', {"email": email, "password": password});
+    final response = await _postData('login', {"email": email, "password": password});
+    if (response.containsKey('token')) {
+      // Lưu token sau khi đăng nhập thành công
+      await saveToken(response['token']);
+    }
+    return response;
   }
 
   Future<Map<String, dynamic>> register(String name, String email, String phone, String password) async {
-    return await _postData('register', {
+    final response = await _postData('register', {
       "name": name,
       "email": email,
       "phone": phone,
-      "password": password
+      "password": password,
     });
+    if (response.containsKey('token')) {
+      // Lưu token sau khi đăng ký thành công (nếu API trả về token)
+      await saveToken(response['token']);
+    }
+    return response;
   }
 
   Future<Map<String, dynamic>> _postData(String endpoint, Map<String, dynamic> data) async {
@@ -23,7 +35,7 @@ class AuthService {
         Uri.parse('$baseUrl/$endpoint'),
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true", // Thêm header để bỏ qua cảnh báo ngrok
+          "ngrok-skip-browser-warning": "true",
         },
         body: jsonEncode(data),
       ).timeout(const Duration(seconds: 10));
@@ -38,5 +50,23 @@ class AuthService {
     } catch (e) {
       return {"error": "Không thể kết nối đến server. Kiểm tra mạng hoặc API: $e"};
     }
+  }
+
+  // Lưu token vào shared_preferences
+  Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+
+  // Lấy token từ shared_preferences
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  // Xóa token (khi đăng xuất)
+  Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
   }
 }

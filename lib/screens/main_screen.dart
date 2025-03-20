@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart'; // Chỉ import nếu cần
+import 'package:provider/provider.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../routes.dart';
+import '../providers/category_provider.dart'; // Thêm CategoryProvider
 
 // Các màn hình con
+
 import 'home/home_screen.dart';
 import 'home/filter_screen.dart';
 import 'home/featured_products_screen.dart';
 import 'home/cart_screen.dart';
 import 'home/profile_screen.dart';
-
-// RouteObserver nếu bạn cần
-// import '../main.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -27,7 +26,8 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Nếu cần tương tác CartProvider hay gì khác thì thêm ở đây
+    // Tải danh mục khi khởi tạo MainScreen
+    Provider.of<CategoryProvider>(context, listen: false).loadCategories();
   }
 
   @override
@@ -111,7 +111,7 @@ class _KeepAliveScreenState extends State<KeepAliveScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // quan trọng để AutomaticKeepAliveClientMixin hoạt động
+    super.build(context);
     return widget.child;
   }
 }

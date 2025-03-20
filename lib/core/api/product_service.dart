@@ -2,12 +2,14 @@ import 'dart:convert';
 import '../../core/api/api_client.dart';
 
 class ProductService {
-  static const String endpoint = 'products/popular-public';
+  static const String popularEndpoint = 'products/popular-public';
+  static const String searchEndpoint = 'search';
 
+  // Lấy danh sách sản phẩm phổ biến
   Future<List<dynamic>> fetchProducts() async {
     try {
-      final response = await ApiClient.getData(endpoint);
-      print('Raw Response from ProductService: $response');
+      final response = await ApiClient.getData(popularEndpoint);
+      print('Raw Response from ProductService (fetchProducts): $response');
 
       if (response is List) {
         print('Data is List: $response');
@@ -17,14 +19,36 @@ class ProductService {
         return [];
       } else if (response is Map && response.containsKey('error')) {
         print('API Error: ${response['error']}');
-        return [];
+        throw Exception('API Error: ${response['error']}');
       } else {
         print('Unexpected response format: $response');
-        return [];
+        throw Exception('Unexpected response format');
       }
     } catch (e) {
       print('Error in fetchProducts: $e');
-      throw Exception('Error: $e');
+      throw Exception('Error fetching products: $e');
+    }
+  }
+
+  // Tìm kiếm sản phẩm theo query
+  Future<List<dynamic>> searchProducts(String query) async {
+    try {
+      final response = await ApiClient.getData('$searchEndpoint?query=$query');
+      print('Raw Response from ProductService (searchProducts): $response');
+
+      if (response is Map && response.containsKey('products')) {
+        print('Search Data: ${response['products']}');
+        return response['products'] as List<dynamic>;
+      } else if (response is Map && response.containsKey('error')) {
+        print('API Error: ${response['error']}');
+        throw Exception('API Error: ${response['error']}');
+      } else {
+        print('Unexpected response format: $response');
+        throw Exception('Unexpected response format');
+      }
+    } catch (e) {
+      print('Error in searchProducts: $e');
+      throw Exception('Error searching products: $e');
     }
   }
 }

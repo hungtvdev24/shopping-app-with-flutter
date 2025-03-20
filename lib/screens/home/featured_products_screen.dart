@@ -42,9 +42,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
 
         // Giao diện chính
         return Scaffold(
-          appBar: AppBar(
-            title: const Text(""), // Tiêu đề rỗng
-          ),
+          
           backgroundColor: Colors.white,
           body: SingleChildScrollView(
             child: Column(

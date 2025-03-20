@@ -50,8 +50,8 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // 2. Danh mục
-                _buildCategoryButtons(context),
-                const SizedBox(height: 16),
+                // _buildCategoryButtons(context),
+                // const SizedBox(height: 16),
 
                 // 3. Khối sản phẩm 1
                 _buildProductSection("Sản phẩm phổ biến", provider.products, context),
@@ -194,82 +194,82 @@ class HomeScreen extends StatelessWidget {
   // --------------------------------------------------------------------------
   //  DANH MỤC
   // --------------------------------------------------------------------------
-  Widget _buildCategoryButtons(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              // Logic cho nút "Tất cả danh mục"
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6200EE), // Màu tím
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.category, size: 20, color: Colors.white),
-                SizedBox(width: 8),
-                Text(
-                  "Tất cả danh mục",
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          OutlinedButton(
-            onPressed: () {
-              // Logic cho nút "Khuyến mãi"
-            },
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.local_offer, size: 20, color: Colors.black54),
-                SizedBox(width: 8),
-                Text(
-                  "Khuyến mãi",
-                  style: TextStyle(color: Colors.black54, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          OutlinedButton(
-            onPressed: () {
-              // Logic cho nút "Nam"
-            },
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.person, size: 20, color: Colors.black54),
-                SizedBox(width: 8),
-                Text(
-                  "Nam",
-                  style: TextStyle(color: Colors.black54, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildCategoryButtons(BuildContext context) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 16),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             // Logic cho nút "Tất cả danh mục"
+  //           },
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: const Color(0xFF6200EE), // Màu tím
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(20),
+  //             ),
+  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //           ),
+  //           child: const Row(
+  //             children: [
+  //               Icon(Icons.category, size: 20, color: Colors.white),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 "Tất cả danh mục",
+  //                 style: TextStyle(color: Colors.white, fontSize: 14),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         OutlinedButton(
+  //           onPressed: () {
+  //             // Logic cho nút "Khuyến mãi"
+  //           },
+  //           style: OutlinedButton.styleFrom(
+  //             side: BorderSide(color: Colors.grey),
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(20),
+  //             ),
+  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //           ),
+  //           child: const Row(
+  //             children: [
+  //               Icon(Icons.local_offer, size: 20, color: Colors.black54),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 "Khuyến mãi",
+  //                 style: TextStyle(color: Colors.black54, fontSize: 14),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         OutlinedButton(
+  //           onPressed: () {
+  //             // Logic cho nút "Nam"
+  //           },
+  //           style: OutlinedButton.styleFrom(
+  //             side: BorderSide(color: Colors.grey),
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(20),
+  //             ),
+  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  //           ),
+  //           child: const Row(
+  //             children: [
+  //               Icon(Icons.person, size: 20, color: Colors.black54),
+  //               SizedBox(width: 8),
+  //               Text(
+  //                 "Nam",
+  //                 style: TextStyle(color: Colors.black54, fontSize: 14),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // --------------------------------------------------------------------------
   //  KHỐI SẢN PHẨM

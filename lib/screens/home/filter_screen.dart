@@ -1,79 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/category_provider.dart';
+import '../product/category_detail_screen.dart';
 
 class FilterScreen extends StatelessWidget {
   const FilterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // Nền trắng đồng bộ
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Ô tìm kiếm
-            _buildSearchBar(),
+    return Consumer<CategoryProvider>(
+      builder: (context, categoryProvider, child) {
+        return Scaffold(
+          backgroundColor: Colors.white, // Nền trắng đồng bộ
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Ô tìm kiếm
+                _buildSearchBar(context),
 
-            const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-            // Tiêu đề
-            const Text(
-              "Danh mục sản phẩm",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+                // Tiêu đề
+                const Text(
+                  "Danh mục sản phẩm",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Danh sách danh mục
+                Expanded(
+                  child: categoryProvider.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : categoryProvider.hasError
+                      ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          categoryProvider.errorMessage ?? "Lỗi không xác định",
+                          style: const TextStyle(color: Colors.red, fontSize: 16),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () => categoryProvider.refreshCategories(),
+                          child: const Text("Thử lại"),
+                        ),
+                      ],
+                    ),
+                  )
+                      : categoryProvider.categories.isEmpty
+                      ? const Center(
+                    child: Text(
+                      "Không có danh mục nào",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  )
+                      : ListView.builder(
+                    itemCount: categoryProvider.categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categoryProvider.categories[index];
+                      return _buildCategoryTile(
+                        context,
+                        category['tenDanhMuc'] ?? "Không có tên",
+                        category['id_danhMuc'],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 10),
-
-            // Danh sách danh mục
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildCategoryTile("🔖 Đang giảm giá", [
-                    "👕 Tất cả quần áo",
-                    "🆕 Hàng mới về",
-                    "🧥 Áo khoác & Áo vest",
-                    "👗 Váy đầm",
-                    "👖 Quần jean"
-                  ]),
-
-                  _buildCategoryTile("🧍 Thời trang Nam & Nữ", [
-                    "👚 Áo thun",
-                    "👔 Áo sơ mi",
-                    "👖 Quần dài",
-                    "👟 Giày dép",
-                    "👜 Phụ kiện"
-                  ]),
-
-                  _buildCategoryTile("👶 Thời trang trẻ em", [
-                    "👕 Quần áo bé trai",
-                    "👗 Quần áo bé gái",
-                    "👟 Giày trẻ em",
-                    "🧸 Đồ chơi",
-                    "🎒 Ba lô & Túi xách"
-                  ]),
-
-                  _buildCategoryTile("🛍️ Phụ kiện thời trang", [
-                    "⌚ Đồng hồ",
-                    "👜 Túi xách",
-                    "🕶️ Kính mắt",
-                    "🧢 Mũ & Nón",
-                    "💍 Trang sức"
-                  ]),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   // Widget ô tìm kiếm
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -92,6 +101,10 @@ class FilterScreen extends StatelessWidget {
                 border: InputBorder.none,
                 hintStyle: TextStyle(color: Colors.grey.shade500),
               ),
+              onTap: () {
+                // Điều hướng đến SearchScreen khi nhấn vào ô tìm kiếm
+                Navigator.pushNamed(context, '/search');
+              },
             ),
           ),
           const Icon(Icons.filter_list, color: Colors.grey),
@@ -101,7 +114,7 @@ class FilterScreen extends StatelessWidget {
   }
 
   // Widget danh mục sản phẩm
-  Widget _buildCategoryTile(String title, List<String> subcategories) {
+  Widget _buildCategoryTile(BuildContext context, String title, int categoryId) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -112,12 +125,24 @@ class FilterScreen extends StatelessWidget {
           title,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        children: subcategories
-            .map((subcategory) => ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 32),
-          title: Text(subcategory, style: const TextStyle(fontSize: 16)),
-        ))
-            .toList(),
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 32),
+            title: const Text("Xem tất cả", style: TextStyle(fontSize: 16)),
+            onTap: () {
+              // Điều hướng đến màn hình chi tiết danh mục
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CategoryDetailScreen(
+                    categoryId: categoryId,
+                    categoryName: title,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
