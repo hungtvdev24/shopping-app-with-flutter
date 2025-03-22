@@ -13,6 +13,7 @@ import 'providers/favorite_product_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/recent_products_provider.dart'; // Thêm RecentProductsProvider
+import 'providers/review_provider.dart'; // Thêm ReviewProvider
 
 // Import file routes
 import 'routes.dart';
@@ -35,6 +36,7 @@ void main() {
         ChangeNotifierProvider(create: (context) => CategoryProvider()),
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
         ChangeNotifierProvider(create: (context) => RecentProductsProvider()), // Thêm RecentProductsProvider
+        ChangeNotifierProvider(create: (context) => ReviewProvider()), // Thêm ReviewProvider
       ],
       child: const MyApp(),
     ),

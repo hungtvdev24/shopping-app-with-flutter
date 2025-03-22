@@ -7,22 +7,30 @@ class ProductProvider extends ChangeNotifier {
   List<dynamic> _products = []; // Danh sách sản phẩm phổ biến
   List<dynamic> _suggestedProducts = []; // Danh sách sản phẩm gợi ý
   List<dynamic> _searchResults = []; // Danh sách kết quả tìm kiếm
+  List<dynamic> _reviews = []; // Danh sách đánh giá
   bool _isLoading = false; // Trạng thái tải
   bool _isSearching = false; // Trạng thái đang tìm kiếm
+  bool _isLoadingReviews = false; // Trạng thái tải đánh giá
   String? _errorMessage; // Thông báo lỗi
   String? _searchErrorMessage; // Thông báo lỗi tìm kiếm
+  String? _reviewsErrorMessage; // Thông báo lỗi tải đánh giá
   bool _hasError = false; // Trạng thái có lỗi
   bool _hasSearchError = false; // Trạng thái có lỗi tìm kiếm
+  bool _hasReviewsError = false; // Trạng thái có lỗi tải đánh giá
 
   List<dynamic> get products => _products;
   List<dynamic> get suggestedProducts => _suggestedProducts;
   List<dynamic> get searchResults => _searchResults;
+  List<dynamic> get reviews => _reviews;
   bool get isLoading => _isLoading;
   bool get isSearching => _isSearching;
+  bool get isLoadingReviews => _isLoadingReviews;
   String? get errorMessage => _errorMessage;
   String? get searchErrorMessage => _searchErrorMessage;
+  String? get reviewsErrorMessage => _reviewsErrorMessage;
   bool get hasError => _hasError;
   bool get hasSearchError => _hasSearchError;
+  bool get hasReviewsError => _hasReviewsError;
 
   ProductProvider() {
     loadProducts();
@@ -52,6 +60,31 @@ class ProductProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  // Tải danh sách đánh giá của sản phẩm
+  Future<void> loadReviews(int productId) async {
+    _isLoadingReviews = true;
+    _reviewsErrorMessage = null;
+    _hasReviewsError = false;
+    notifyListeners();
+
+    try {
+      final fetchedReviews = await _productService.fetchReviews(productId);
+      _reviews = fetchedReviews;
+      if (_reviews.isEmpty) {
+        _reviewsErrorMessage = "Chưa có đánh giá nào cho sản phẩm này.";
+      }
+      print('Fetched reviews in ProductProvider: $_reviews');
+    } catch (e) {
+      _reviewsErrorMessage = "Lỗi khi tải đánh giá: $e";
+      _hasReviewsError = true;
+      _reviews = [];
+      print(_reviewsErrorMessage);
+    }
+
+    _isLoadingReviews = false;
     notifyListeners();
   }
 
@@ -129,6 +162,15 @@ class ProductProvider extends ChangeNotifier {
     _searchErrorMessage = null;
     _hasSearchError = false;
     _isSearching = false;
+    notifyListeners();
+  }
+
+  // Xóa danh sách đánh giá
+  void clearReviews() {
+    _reviews = [];
+    _reviewsErrorMessage = null;
+    _hasReviewsError = false;
+    _isLoadingReviews = false;
     notifyListeners();
   }
 }

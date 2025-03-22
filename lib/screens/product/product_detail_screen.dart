@@ -7,10 +7,25 @@ import '../../providers/favorite_product_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/recent_products_provider.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
 
   const ProductDetailScreen({super.key, required this.product});
+
+  @override
+  _ProductDetailScreenState createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Tải danh sách đánh giá khi vào màn hình
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      productProvider.loadReviews(widget.product['id_sanPham'] as int);
+    });
+  }
 
   Future<void> _addToCart(BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -25,7 +40,7 @@ class ProductDetailScreen extends StatelessWidget {
     }
 
     try {
-      await cartProvider.addToCart(userProvider.token!, product['id_sanPham'] as int, 1, context);
+      await cartProvider.addToCart(userProvider.token!, widget.product['id_sanPham'] as int, 1, context);
       scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
       );
@@ -70,7 +85,7 @@ class ProductDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png";
+    final imageUrl = widget.product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png";
     final productProvider = Provider.of<ProductProvider>(context);
 
     // Thêm sản phẩm vào lịch sử xem gần đây
@@ -78,17 +93,17 @@ class ProductDetailScreen extends StatelessWidget {
       final recentProductsProvider = Provider.of<RecentProductsProvider>(context, listen: false);
       recentProductsProvider.addRecentProduct(
         RecentProduct(
-          id: product['id_sanPham'] as int,
-          name: product['tenSanPham'] ?? "Không có tên",
-          image: product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png",
-          price: double.tryParse(product['gia'].toString()) ?? 0.0,
+          id: widget.product['id_sanPham'] as int,
+          name: widget.product['tenSanPham'] ?? "Không có tên",
+          image: widget.product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png",
+          price: double.tryParse(widget.product['gia'].toString()) ?? 0.0,
         ),
       );
     });
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(product['tenSanPham'] ?? "Chi tiết sản phẩm"),
+        title: Text(widget.product['tenSanPham'] ?? "Chi tiết sản phẩm"),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -141,14 +156,14 @@ class ProductDetailScreen extends StatelessWidget {
                   right: 10,
                   child: Consumer<FavoriteProductProvider>(
                     builder: (context, favoriteProvider, child) {
-                      bool isFavorite = favoriteProvider.favorites.any((fav) => fav['id_sanPham'] == product['id_sanPham']);
+                      bool isFavorite = favoriteProvider.favorites.any((fav) => fav['id_sanPham'] == widget.product['id_sanPham']);
                       return IconButton(
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: isFavorite ? Colors.red : Colors.grey,
                           size: 30,
                         ),
-                        onPressed: () => _toggleFavorite(context, productId: product['id_sanPham']),
+                        onPressed: () => _toggleFavorite(context, productId: widget.product['id_sanPham']),
                       );
                     },
                   ),
@@ -161,7 +176,7 @@ class ProductDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product['thuongHieu'] ?? "Không có thương hiệu",
+                    widget.product['thuongHieu'] ?? "Không có thương hiệu",
                     style: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
@@ -169,7 +184,7 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    product['tenSanPham'] ?? "Không có tên",
+                    widget.product['tenSanPham'] ?? "Không có tên",
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -181,7 +196,7 @@ class ProductDetailScreen extends StatelessWidget {
                       const Icon(Icons.star, color: Colors.yellow, size: 20),
                       const SizedBox(width: 4),
                       Text(
-                        "${product['soSaoDanhGia'] ?? '0'} (126 Đánh giá)",
+                        "${widget.product['soSaoDanhGia'] ?? '0'} (126 Đánh giá)",
                         style: const TextStyle(fontSize: 16),
                       ),
                       const Spacer(),
@@ -208,17 +223,115 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    product['moTa'] ?? "Không có mô tả",
+                    widget.product['moTa'] ?? "Không có mô tả",
                     style: const TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "${NumberFormat("#,###", "vi_VN").format(double.tryParse(product['gia'].toString()) ?? 0)} ₫",
+                    "${NumberFormat("#,###", "vi_VN").format(double.tryParse(widget.product['gia'].toString()) ?? 0)} ₫",
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: Colors.blue,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Phần hiển thị đánh giá
+                  const Text(
+                    "Đánh giá sản phẩm",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Consumer<ProductProvider>(
+                    builder: (context, productProvider, child) {
+                      if (productProvider.isLoadingReviews) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (productProvider.hasReviewsError) {
+                        return Text(
+                          productProvider.reviewsErrorMessage ?? "Lỗi khi tải đánh giá.",
+                          style: const TextStyle(color: Colors.red, fontSize: 16),
+                        );
+                      } else if (productProvider.reviews.isEmpty) {
+                        return const Text(
+                          "Chưa có đánh giá nào cho sản phẩm này.",
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        );
+                      }
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: productProvider.reviews.length,
+                        itemBuilder: (context, index) {
+                          final review = productProvider.reviews[index];
+                          final userName = review['user'] != null && review['user']['name'] != null
+                              ? review['user']['name']
+                              : "Người dùng ẩn danh";
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        userName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Row(
+                                        children: List.generate(
+                                          (review['soSao'] as int?) ?? 0,
+                                              (i) => const Icon(
+                                            Icons.star,
+                                            color: Colors.yellow,
+                                            size: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    review['binhLuan'] ?? "Không có bình luận",
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (review['urlHinhAnh'] != null)
+                                    Image.network(
+                                      review['urlHinhAnh'],
+                                      height: 100,
+                                      width: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const SizedBox();
+                                      },
+                                    ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    DateFormat('dd/MM/yyyy HH:mm').format(
+                                      DateTime.parse(review['created_at']),
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
@@ -269,8 +382,8 @@ class ProductDetailScreen extends StatelessWidget {
 
                       final suggestedProducts = productProvider.products
                           .where((prod) =>
-                      prod['id_danhMuc'] == product['id_danhMuc'] &&
-                          prod['id_sanPham'] != product['id_sanPham'])
+                      prod['id_danhMuc'] == widget.product['id_danhMuc'] &&
+                          prod['id_sanPham'] != widget.product['id_sanPham'])
                           .toList();
 
                       if (suggestedProducts.isEmpty) {

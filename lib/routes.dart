@@ -16,6 +16,7 @@ import 'screens/product/notification_screen.dart';
 import 'screens/product/category_detail_screen.dart';
 import 'screens/product/share_screen.dart';
 import 'screens/product/recent_history_screen.dart';
+import 'screens/product/review_screen.dart'; // Thêm ReviewScreen
 import 'screens/product/product_detail_screen.dart';
 import 'screens/order/order_screen.dart';
 
@@ -36,6 +37,7 @@ class AppRoutes {
   static const String share = '/share';
   static const String recentHistory = '/recent-history';
   static const String productDetail = '/product-detail';
+  static const String review = '/review'; // Thêm route cho ReviewScreen
 }
 
 Map<String, WidgetBuilder> appRoutes = {
@@ -70,5 +72,12 @@ Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.productDetail: (context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     return ProductDetailScreen(product: args);
+  },
+  AppRoutes.review: (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    return ReviewScreen(
+      orderId: args['orderId'] as int,
+      productId: args['productId'] as int,
+    );
   },
 };

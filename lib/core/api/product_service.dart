@@ -51,4 +51,29 @@ class ProductService {
       throw Exception('Error searching products: $e');
     }
   }
+
+  // Lấy danh sách đánh giá của sản phẩm
+  Future<List<dynamic>> fetchReviews(int productId) async {
+    try {
+      final response = await ApiClient.getData('products/$productId/reviews');
+      print('Raw Response from ProductService (fetchReviews): $response');
+
+      if (response is Map && response.containsKey('reviews')) {
+        print('Reviews Data: ${response['reviews']}');
+        return response['reviews'] as List<dynamic>;
+      } else if (response is Map && response.containsKey('message')) {
+        print('No reviews found: ${response['message']}');
+        return [];
+      } else if (response is Map && response.containsKey('error')) {
+        print('API Error: ${response['error']}');
+        throw Exception('API Error: ${response['error']}');
+      } else {
+        print('Unexpected response format: $response');
+        throw Exception('Unexpected response format');
+      }
+    } catch (e) {
+      print('Error in fetchReviews: $e');
+      throw Exception('Error fetching reviews: $e');
+    }
+  }
 }
