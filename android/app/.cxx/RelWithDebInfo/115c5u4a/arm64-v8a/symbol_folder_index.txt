@@ -1,1 +1,1 @@
-D:\testdatn\build\app\intermediates\cxx\RelWithDebInfo\115c5u4a\obj\arm64-v8a
+D:\datnbeestyle\build\app\intermediates\cxx\RelWithDebInfo\115c5u4a\obj\arm64-v8a

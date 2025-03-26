@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes.dart';
 
+// Màn hình đăng ký, một StatefulWidget để quản lý trạng thái
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -11,21 +12,24 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Các controller để lấy dữ liệu từ TextFormField
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
+  // Key để validate toàn bộ form
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool isLoading = false;
-  bool agreePolicy = false; // cho checkbox "đồng ý điều khoản"
+  bool isLoading = false; // Trạng thái loading khi gửi request đăng ký
+  bool agreePolicy = false; // Trạng thái checkbox "đồng ý điều khoản"
 
+  // Hàm xử lý logic đăng ký
   void _register() async {
-    // Kiểm tra form
+    // 1. Kiểm tra form hợp lệ
     if (!_formKey.currentState!.validate()) return;
 
-    // Kiểm tra checkbox điều khoản
+    // 2. Kiểm tra checkbox điều khoản
     if (!agreePolicy) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Bạn cần đồng ý với điều khoản để tiếp tục.")),
@@ -33,10 +37,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // 3. Bật trạng thái loading
     setState(() {
       isLoading = true;
     });
 
+    // 4. Gọi AuthProvider để gửi request đăng ký
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     bool success = await authProvider.register(
       nameController.text.trim(),
@@ -45,11 +51,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       passwordController.text.trim(),
     );
 
+    // 5. Tắt trạng thái loading
     setState(() {
       isLoading = false;
     });
 
+    // 6. Xử lý kết quả đăng ký
     if (success) {
+      // Thành công: Hiển thị thông báo và chuyển sang màn login sau 2 giây
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Đăng ký thành công! Đang chuyển đến trang đăng nhập...")),
       );
@@ -64,6 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       });
     } else {
+      // Thất bại: Hiển thị thông báo lỗi
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(authProvider.errorMessage ?? "Lỗi đăng ký")),
       );
@@ -73,25 +83,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Màu ghi nhạt tổng thể
-      backgroundColor: Colors.grey[200],
+      backgroundColor: Colors.grey[200], // Màu nền tổng thể: xám nhạt
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: SingleChildScrollView( // Cho phép cuộn khi nội dung dài
           child: Column(
             children: [
-              // 1) Ảnh trên cùng (trung tâm, cao 180)
+              // 1. Ảnh header
               const SizedBox(height: 16),
               Center(
                 child: Image.asset(
                   'assets/login_header.png',
                   height: 180,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.error), // Hiển thị lỗi nếu không tải được ảnh
                 ),
               ),
               const SizedBox(height: 24),
 
-              // 2) Tiêu đề
+              // 2. Tiêu đề
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Align(
@@ -108,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
 
-              // 3) Mô tả ngắn
+              // 3. Mô tả ngắn
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Align(
@@ -124,26 +133,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 4) Form đăng ký (trắng)
+              // 4. Form đăng ký (Container trắng chứa các trường nhập liệu)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white, // nền trắng
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white, // Nền trắng nổi bật trên nền xám
+                  borderRadius: BorderRadius.circular(16), // Bo góc
                 ),
                 child: Form(
-                  key: _formKey,
+                  key: _formKey, // Gắn key để validate form
                   child: Column(
                     children: [
-                      // Tên
+                      // Trường nhập tên
                       _buildTextField(
                         nameController,
                         "Tên",
                         Icons.person,
                         "Vui lòng nhập tên",
                       ),
-                      // Email
+                      // Trường nhập email
                       _buildTextField(
                         emailController,
                         "Địa chỉ Email",
@@ -151,14 +160,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "Vui lòng nhập email",
                         isEmail: true,
                       ),
-                      // SĐT
+                      // Trường nhập số điện thoại
                       _buildTextField(
                         phoneController,
                         "Số điện thoại",
                         Icons.phone,
                         "Vui lòng nhập số điện thoại",
                       ),
-                      // Mật khẩu
+                      // Trường nhập mật khẩu
                       _buildTextField(
                         passwordController,
                         "Mật khẩu",
@@ -166,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "Vui lòng nhập mật khẩu",
                         isPassword: true,
                       ),
-                      // Xác nhận mật khẩu
+                      // Trường xác nhận mật khẩu
                       _buildTextField(
                         confirmPasswordController,
                         "Xác nhận mật khẩu",
@@ -177,14 +186,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 5) Checkbox điều khoản
+                      // 5. Checkbox điều khoản
                       Row(
                         children: [
                           Checkbox(
                             value: agreePolicy,
                             onChanged: (val) {
                               setState(() {
-                                agreePolicy = val ?? false;
+                                agreePolicy = val ?? false; // Cập nhật trạng thái checkbox
                               });
                             },
                           ),
@@ -196,12 +205,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 children: [
                                   TextSpan(
                                     text: "Điều khoản dịch vụ",
-                                    style: TextStyle(fontSize: 14, color: Colors.blue),
+                                    style: TextStyle(fontSize: 14, color: Colors.blue), // Chưa có sự kiện nhấp vào
                                   ),
                                   const TextSpan(text: " & "),
                                   TextSpan(
                                     text: "chính sách bảo mật.",
-                                    style: TextStyle(fontSize: 14, color: Colors.blue),
+                                    style: TextStyle(fontSize: 14, color: Colors.blue), // Chưa có sự kiện nhấp vào
                                   ),
                                 ],
                               ),
@@ -211,17 +220,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // 6) Nút đăng ký
+                      // 6. Nút "Tiếp tục"
                       isLoading
-                          ? const CircularProgressIndicator()
+                          ? const CircularProgressIndicator() // Hiển thị loading khi đang xử lý
                           : SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _register,
+                          onPressed: _register, // Gọi hàm đăng ký khi nhấn
                           style: ElevatedButton.styleFrom(
-                            // Button màu xanh nhạt
-                            backgroundColor: Colors.lightBlue,
+                            backgroundColor: Colors.lightBlue, // Màu xanh nhạt
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -238,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // 7) Đã có tài khoản? Log in
+                      // 7. Link chuyển sang màn đăng nhập
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -247,7 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                           GestureDetector(
-                            onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.login),
+                            onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.login), // Chuyển sang màn login
                             child: const Text(
                               "Đăng nhập",
                               style: TextStyle(
@@ -271,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// Hàm dựng TextFormField tái sử dụng
+  /// Hàm tái sử dụng để tạo TextFormField
   Widget _buildTextField(
       TextEditingController controller,
       String label,
@@ -285,20 +293,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        obscureText: isPassword,
-        keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+        obscureText: isPassword, // Ẩn text nếu là mật khẩu
+        keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text, // Bàn phím phù hợp
         decoration: InputDecoration(
           hintText: label,
           prefixIcon: Icon(icon, color: Colors.grey[700]),
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: Colors.grey[100], // Nền xám nhạt cho trường nhập
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none, // không viền, bo góc
+            borderSide: BorderSide.none, // Không viền
           ),
         ),
-        validator: (value) {
+        validator: (value) { // Logic validate cho từng trường
           if (value == null || value.trim().isEmpty) {
             return errorText;
           }
@@ -312,7 +320,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return "Mật khẩu tối thiểu 6 ký tự";
           }
           if (confirmPasswordOf != null) {
-            // Kiểm tra trùng mật khẩu
             if (value.trim() != confirmPasswordOf.text.trim()) {
               return "Mật khẩu không khớp";
             }

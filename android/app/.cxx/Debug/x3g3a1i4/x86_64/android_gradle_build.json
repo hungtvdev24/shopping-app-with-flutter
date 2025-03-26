@@ -6,14 +6,14 @@
     [
       "C:\\Users\\hungdev24\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
       "-C",
-      "D:\\testdatn\\android\\app\\.cxx\\Debug\\x3g3a1i4\\x86_64",
+      "D:\\datnbeestyle\\android\\app\\.cxx\\Debug\\x3g3a1i4\\x86_64",
       "clean"
     ]
   ],
   "buildTargetsCommandComponents": [
     "C:\\Users\\hungdev24\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
     "-C",
-    "D:\\testdatn\\android\\app\\.cxx\\Debug\\x3g3a1i4\\x86_64",
+    "D:\\datnbeestyle\\android\\app\\.cxx\\Debug\\x3g3a1i4\\x86_64",
     "{LIST_OF_TARGETS_TO_BUILD}"
   ],
   "libraries": {},

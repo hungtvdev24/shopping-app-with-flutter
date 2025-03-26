@@ -288,7 +288,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     final imageUrl = product['urlHinhAnh']?.toString().startsWith('http') == true
         ? product['urlHinhAnh']
-        : "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/images/default.png";
+        : "https://72f7-104-28-254-73.ngrok-free.app/images/default.png";
     final thuongHieu = product['thuongHieu'] ?? "Không có thương hiệu";
     final tenSanPham = product['tenSanPham'] ?? "Không có tên";
     final double originalPrice = double.tryParse(product['gia'].toString()) ?? 0.0;

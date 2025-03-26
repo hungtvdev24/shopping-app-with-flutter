@@ -1,4 +1,4 @@
-import 'package:testdatn/core/models/notification.dart';
+import 'package:datnbeestyle/core/models/notification.dart';
 import 'api_client.dart';
 
 class NotificationService {

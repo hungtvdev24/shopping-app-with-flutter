@@ -1,2 +1,2 @@
-D:/testdatn/android/app/.cxx/RelWithDebInfo/115c5u4a/x86/CMakeFiles/edit_cache.dir
-D:/testdatn/android/app/.cxx/RelWithDebInfo/115c5u4a/x86/CMakeFiles/rebuild_cache.dir
+D:/datnbeestyle/android/app/.cxx/RelWithDebInfo/115c5u4a/x86/CMakeFiles/edit_cache.dir
+D:/datnbeestyle/android/app/.cxx/RelWithDebInfo/115c5u4a/x86/CMakeFiles/rebuild_cache.dir

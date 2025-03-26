@@ -1,2 +1,2 @@
-D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/armeabi-v7a/CMakeFiles/edit_cache.dir
-D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/armeabi-v7a/CMakeFiles/rebuild_cache.dir

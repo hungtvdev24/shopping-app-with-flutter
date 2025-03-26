@@ -37,7 +37,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeSystem.cmake"
+			"path" : "D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeSystem.cmake"
 		},
 		{
 			"isExternal" : true,
@@ -303,7 +303,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCCompiler.cmake"
+			"path" : "D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -537,7 +537,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCXXCompiler.cmake"
+			"path" : "D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCXXCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -688,7 +688,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCCompiler.cmake"
+			"path" : "D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -782,13 +782,13 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCXXCompiler.cmake"
+			"path" : "D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CMakeCXXCompiler.cmake"
 		}
 	],
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "D:/testdatn/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a",
+		"build" : "D:/datnbeestyle/android/app/.cxx/Debug/x3g3a1i4/arm64-v8a",
 		"source" : "D:/flutter/packages/flutter_tools/gradle/src/main/groovy"
 	},
 	"version" : 

@@ -151,7 +151,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "d:/testdatn/android/app/.cxx/RelWithDebInfo/115c5u4a/x86"
+			"value" : "d:/datnbeestyle/android/app/.cxx/RelWithDebInfo/115c5u4a/x86"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -751,7 +751,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "D:\\testdatn\\build\\app\\intermediates\\cxx\\RelWithDebInfo\\115c5u4a\\obj\\x86"
+			"value" : "D:\\datnbeestyle\\build\\app\\intermediates\\cxx\\RelWithDebInfo\\115c5u4a\\obj\\x86"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -1023,7 +1023,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "D:\\testdatn\\build\\app\\intermediates\\cxx\\RelWithDebInfo\\115c5u4a\\obj\\x86"
+			"value" : "D:\\datnbeestyle\\build\\app\\intermediates\\cxx\\RelWithDebInfo\\115c5u4a\\obj\\x86"
 		},
 		{
 			"name" : "CMAKE_SHARED_LINKER_FLAGS",
@@ -1331,7 +1331,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/testdatn/android/app/.cxx/RelWithDebInfo/115c5u4a/x86"
+			"value" : "D:/datnbeestyle/android/app/.cxx/RelWithDebInfo/115c5u4a/x86"
 		},
 		{
 			"name" : "Project_IS_TOP_LEVEL",

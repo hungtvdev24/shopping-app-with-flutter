@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = "https://a0ad-42-116-174-245.ngrok-free.app/api_app/public/api";
+  static const String baseUrl = "https://72f7-104-28-254-73.ngrok-free.app/api";
 
   // Phương thức POST
   static Future<Map<String, dynamic>> postData(String url, Map<String, dynamic> data, {String? token}) async {
