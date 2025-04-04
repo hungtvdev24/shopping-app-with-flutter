@@ -44,7 +44,8 @@ class MyOrderProvider extends ChangeNotifier {
 
     try {
       await MyOrderService.cancelOrder(token, orderId);
-      // Sau khi hủy thành công, bạn có thể cập nhật lại danh sách đơn hàng nếu cần
+      // Sau khi hủy thành công, cập nhật lại danh sách đơn hàng hoặc chi tiết đơn hàng nếu cần
+      await loadOrders(token); // Tùy chọn: Cập nhật toàn bộ danh sách
       return true;
     } catch (e) {
       errorMessage = e.toString();

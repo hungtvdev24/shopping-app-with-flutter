@@ -34,21 +34,24 @@ class _AddressListScreenState extends State<AddressListScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Xác nhận xóa"),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text(
+            "Xác nhận xóa",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+          ),
           content: const Text("Bạn có chắc muốn xóa địa chỉ này không?"),
           actions: [
             TextButton(
               child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: const Text("Xóa", style: TextStyle(color: Colors.red)),
               onPressed: () async {
                 Navigator.of(context).pop();
                 try {
-                  await Provider.of<AddressProvider>(context, listen: false).removeAddress(token, addr.idDiaChi);
+                  await Provider.of<AddressProvider>(context, listen: false)
+                      .removeAddress(token, addr.idDiaChi);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Xóa địa chỉ thành công!'),
@@ -77,18 +80,34 @@ class _AddressListScreenState extends State<AddressListScreen> {
     final addresses = addressProvider.addresses;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
           "Địa chỉ giao hàng",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         backgroundColor: Colors.white,
-        elevation: 1,
+        elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Colors.grey[300],
+            height: 1,
+          ),
+        ),
       ),
       body: addressProvider.isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.blue))
+          ? const Center(
+        child: CircularProgressIndicator(
+          color: Colors.blue,
+          strokeWidth: 3,
+        ),
+      )
           : addressProvider.errorMessage != null
           ? Center(
         child: Padding(
@@ -96,13 +115,23 @@ class _AddressListScreenState extends State<AddressListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Icon(
+                Icons.error_outline,
+                size: 60,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
               Text(
                 addressProvider.errorMessage!,
-                style: const TextStyle(color: Colors.red, fontSize: 16),
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () {
                   final userProvider = Provider.of<UserProvider>(context, listen: false);
                   final token = userProvider.token;
@@ -112,10 +141,14 @@ class _AddressListScreenState extends State<AddressListScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 3,
                 ),
-                child: const Text(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                label: const Text(
                   "Thử lại",
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
@@ -142,12 +175,47 @@ class _AddressListScreenState extends State<AddressListScreen> {
                     const SizedBox(height: 16),
                     const Text(
                       "Chưa có địa chỉ nào",
-                      style: TextStyle(color: Colors.grey, fontSize: 18),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       "Hãy thêm địa chỉ để bắt đầu mua sắm!",
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AddAddressScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                      ),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        "Thêm địa chỉ ngay",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -158,51 +226,78 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   final addr = addresses[index];
                   final userProvider = Provider.of<UserProvider>(context, listen: false);
                   final token = userProvider.token;
-                  return RadioListTile(
-                    value: addr,
-                    groupValue: null, // Không cần chọn mặc định, chỉ hiển thị
-                    onChanged: (value) {},
-                    title: Text(
-                      addr.tenNguoiNhan ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  return Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "${addr.tenNha ?? ''}, ${addr.xa ?? ''}, ${addr.huyen ?? ''}, ${addr.tinh ?? ''}",
-                          style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                        ),
-                        Text(
-                          "SDT: ${addr.sdtNhanHang ?? ''}",
-                          style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    secondary: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AddAddressScreen(address: addr),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            color: Colors.blue,
+                            size: 30,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  addr.tenNguoiNhan ?? '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${addr.tenNha ?? ''}, ${addr.xa ?? ''}, ${addr.huyen ?? ''}, ${addr.tinh ?? ''}",
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "SDT: ${addr.sdtNhanHang ?? ''}",
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddAddressScreen(address: addr),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: token != null
-                              ? () => _showDeleteConfirmationDialog(context, addr, token)
-                              : null,
-                        ),
-                      ],
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: token != null
+                                    ? () => _showDeleteConfirmationDialog(context, addr, token)
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    activeColor: Colors.blue,
-                    controlAffinity: ListTileControlAffinity.leading,
                   );
                 },
               ),
@@ -210,7 +305,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -219,12 +314,20 @@ class _AddressListScreenState extends State<AddressListScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 3,
                 ),
-                child: const Text(
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
                   "Thêm Địa Chỉ Mới",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -278,46 +381,80 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(
           widget.address == null ? "Thêm địa chỉ" : "Sửa địa chỉ",
-          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         backgroundColor: Colors.white,
-        elevation: 1,
+        elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Colors.grey[300],
+            height: 1,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTextField(_sdtController, "Số điện thoại nhận hàng"),
-              _buildTextField(_tenNguoiNhanController, "Tên người nhận"),
-              _buildTextField(_tenNhaController, "Số nhà / Tên nhà"),
-              _buildTextField(_tinhController, "Tỉnh"),
-              _buildTextField(_huyenController, "Huyện"),
-              _buildTextField(_xaController, "Xã / Phường"),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _onSubmit(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Thông tin địa chỉ",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                  child: Text(
-                    widget.address == null ? "Lưu" : "Cập nhật",
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  const SizedBox(height: 16),
+                  _buildTextField(_tenNguoiNhanController, "Tên người nhận"),
+                  _buildTextField(_sdtController, "Số điện thoại nhận hàng"),
+                  _buildTextField(_tenNhaController, "Số nhà / Tên nhà"),
+                  _buildTextField(_tinhController, "Tỉnh"),
+                  _buildTextField(_huyenController, "Huyện"),
+                  _buildTextField(_xaController, "Xã / Phường"),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _onSubmit(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                      ),
+                      child: Text(
+                        widget.address == null ? "Lưu" : "Cập nhật",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -333,15 +470,20 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
           labelText: label,
           labelStyle: const TextStyle(color: Colors.grey),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.grey[300]!),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.blue),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.blue, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
           ),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart'; // Thêm import này
 
 // Import các provider
 import 'providers/auth_provider.dart';
@@ -12,8 +14,8 @@ import 'providers/myorder_provider.dart';
 import 'providers/favorite_product_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/notification_provider.dart';
-import 'providers/recent_products_provider.dart'; // Thêm RecentProductsProvider
-import 'providers/review_provider.dart'; // Thêm ReviewProvider
+import 'providers/recent_products_provider.dart';
+import 'providers/review_provider.dart';
 
 // Import file routes
 import 'routes.dart';
@@ -21,7 +23,9 @@ import 'routes.dart';
 // Khai báo routeObserver nếu cần
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('vi_VN', null); // Khởi tạo định dạng ngày giờ cho tiếng Việt
   runApp(
     MultiProvider(
       providers: [
@@ -35,8 +39,8 @@ void main() {
         ChangeNotifierProvider(create: (context) => FavoriteProductProvider()),
         ChangeNotifierProvider(create: (context) => CategoryProvider()),
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
-        ChangeNotifierProvider(create: (context) => RecentProductsProvider()), // Thêm RecentProductsProvider
-        ChangeNotifierProvider(create: (context) => ReviewProvider()), // Thêm ReviewProvider
+        ChangeNotifierProvider(create: (context) => RecentProductsProvider()),
+        ChangeNotifierProvider(create: (context) => ReviewProvider()),
       ],
       child: const MyApp(),
     ),

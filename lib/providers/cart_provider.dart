@@ -44,14 +44,23 @@ class CartProvider extends ChangeNotifier {
         final items = List<Map<String, dynamic>>.from(
           response['cart']['muc_gio_hangs'].map((item) {
             final product = productProvider.getProductById(item['id_sanPham']);
+            final variation = product?['variations']?.firstWhere(
+                  (v) => v['id'] == item['variation_id'],
+              orElse: () => null,
+            ) ?? {'color': '', 'size': '', 'images': [], 'price': 0.0}; // Giá trị mặc định
             return {
               'id_mucGioHang': item['id_mucGioHang'],
               'id_sanPham': item['id_sanPham'],
+              'variation_id': item['variation_id'],
               'soLuong': item['soLuong'],
-              'gia': double.tryParse(item['gia'].toString()) ?? 0.0,
+              'gia': double.tryParse(variation['price']?.toString() ?? item['gia'].toString()) ?? 0.0, // Ưu tiên giá biến thể
               'name': item['product']?['tenSanPham'] ?? product?['tenSanPham'] ?? 'Không có tên',
               'thuongHieu': item['product']?['thuongHieu'] ?? product?['thuongHieu'] ?? 'Không có thương hiệu',
-              'image': product?['urlHinhAnh'] ?? 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150',
+              'image': variation['images']?.isNotEmpty ?? false
+                  ? variation['images'][0]['image_url']
+                  : product?['urlHinhAnh'] ?? 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150',
+              'color': variation['color'] ?? '',
+              'size': variation['size'] ?? '',
               'selected': false,
             };
           }),
@@ -62,7 +71,7 @@ class CartProvider extends ChangeNotifier {
         setErrorMessage('Giỏ hàng trống hoặc không có dữ liệu.');
       }
     } catch (e) {
-      setErrorMessage('Lỗi khi tải giỏ hàng: $e');
+      setErrorMessage('Lỗi khi tải giỏ hàng: ${e.toString()}');
       setCartItems([]);
     } finally {
       setLoading(false);
@@ -90,14 +99,14 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
-  /// Thêm sản phẩm vào giỏ hàng
-  Future<void> addToCart(String token, int productId, int quantity, BuildContext context) async {
+  /// Thêm sản phẩm vào giỏ hàng với variation_id
+  Future<void> addToCart(String token, int productId, int quantity, int variationId, BuildContext context) async {
     try {
       setLoading(true);
-      await CartService.addToCart(token, productId, quantity);
+      await CartService.addToCart(token, productId, quantity, variationId);
       await loadCart(token, context);
     } catch (e) {
-      setErrorMessage('Lỗi khi thêm sản phẩm vào giỏ hàng: $e');
+      setErrorMessage('Lỗi khi thêm sản phẩm vào giỏ hàng: ${e.toString()}');
     } finally {
       setLoading(false);
     }

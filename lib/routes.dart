@@ -78,6 +78,7 @@ Map<String, WidgetBuilder> appRoutes = {
     return ReviewScreen(
       orderId: args['orderId'] as int,
       productId: args['productId'] as int,
+      variationId: args['variationId'] as int, // Thêm variationId
     );
   },
 };

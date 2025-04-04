@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 // Màn hình Checkout (nếu có)
 import '../order/checkout_screen.dart';
-// Màn hình chi tiết sản phẩm (nếu có)
+// Màn hình chi tiết sản phẩm
 import '../product/product_detail_screen.dart';
 
 // Providers
@@ -15,7 +15,7 @@ import '../../providers/cart_provider.dart';
 import '../../main.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({Key? key}) : super(key: key);
+  const CartScreen({super.key});
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -67,12 +67,15 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     try {
       await cartProvider.loadCart(userProvider.token!, context);
       debugPrint('Loaded cart items: ${cartProvider.cartItems}');
+      for (var item in cartProvider.cartItems) {
+        debugPrint('Product: ${item['name']}, Image URL: ${item['image']}');
+      }
     } catch (e) {
       cartProvider.setErrorMessage('Lỗi khi tải giỏ hàng: $e');
+      debugPrint('Cart loading error: $e');
     }
   }
 
-  /// Chọn/Bỏ chọn một mục
   void _toggleSelect(int index) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final updatedItems = List<Map<String, dynamic>>.from(cartProvider.cartItems);
@@ -80,7 +83,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     cartProvider.setCartItems(updatedItems);
   }
 
-  /// Tăng/giảm số lượng của một mục
   Future<void> _updateQuantity(int index, int change) async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -99,10 +101,8 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     try {
       await cartProvider.updateCartItemQuantity(
           userProvider.token!, updatedItems[index]['id_mucGioHang'], newQty, context);
-      // Không hiển thị thông báo, chỉ tải lại giỏ hàng
       await _loadCart();
     } catch (e) {
-      // Rollback nếu có lỗi
       updatedItems[index]['soLuong'] = currentQty;
       cartProvider.setCartItems(updatedItems);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +110,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     }
   }
 
-  /// Xoá các mục đã được chọn
   Future<void> _removeSelectedItems() async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -125,7 +124,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
           const SnackBar(content: Text('Vui lòng chọn ít nhất một mục để xóa!')));
       return;
     }
-    // Hiển thị dialog xác nhận
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -134,18 +132,17 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
           content: const Text('Bạn có chắc chắn muốn xóa các mục đã chọn?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // Hủy
+              onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Hủy'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // Đồng ý
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Đồng ý'),
             ),
           ],
         );
       },
     );
-    // Nếu người dùng đồng ý, tiến hành xóa
     if (confirm == true) {
       for (var item in selectedItems) {
         try {
@@ -176,7 +173,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
             backgroundColor: Colors.white,
             body: Column(
               children: [
-                // Danh sách giỏ hàng
                 Expanded(
                   child: cartProvider.isLoading
                       ? const Center(child: CircularProgressIndicator())
@@ -229,7 +225,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     );
   }
 
-  /// Widget Header: "Chọn tất cả" & "Xóa mục đã chọn"
   Widget _buildHeader() {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
@@ -270,15 +265,14 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     );
   }
 
-  /// Widget hiển thị một mục sản phẩm trong giỏ hàng
   Widget _buildCartItem(Map<String, dynamic> product, int index, BuildContext context) {
     final String? image = product['image'];
     final String? thuongHieu = product['thuongHieu'];
     final String? name = product['name'];
     final double originalPrice = product['gia'] as double;
     final int soLuong = product['soLuong'] ?? 1;
+    final String? size = product['size'];
 
-    // Tính discount (giả lập 20%)
     const double discountPercent = 20;
     final double discountedPrice = originalPrice * (1 - discountPercent / 100);
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -287,11 +281,13 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
 
     return GestureDetector(
       onTap: () {
+        // Tạo dữ liệu sản phẩm để truyền vào ProductDetailScreen
         final productDetail = {
-          'urlHinhAnh': image,
+          'urlHinhAnh': image ?? "https://picsum.photos/150",
           'thuongHieu': thuongHieu,
           'tenSanPham': name,
           'gia': originalPrice,
+          'size': size,
         };
         Navigator.push(
           context,
@@ -309,24 +305,23 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Checkbox chọn mục
             Checkbox(
               activeColor: Colors.green,
               value: product['selected'] ?? false,
               onChanged: (value) => _toggleSelect(index),
             ),
-            // Hình ảnh sản phẩm
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 bottomLeft: Radius.circular(12),
               ),
               child: Image.network(
-                image ?? "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150",
+                image ?? "https://picsum.photos/150",
                 width: imageSize,
                 height: imageSize,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
+                  debugPrint('Failed to load image: $image, error: $error');
                   return Container(
                     color: Colors.grey[300],
                     alignment: Alignment.center,
@@ -345,12 +340,19 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
                 },
               ),
             ),
-            // Nội dung sản phẩm
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: _buildItemContent(
-                    thuongHieu, name, originalPrice, discountedPrice, soLuong, index, context, arrowButtonSize),
+                  thuongHieu,
+                  name,
+                  originalPrice,
+                  discountedPrice,
+                  soLuong,
+                  index,
+                  context,
+                  arrowButtonSize,
+                ),
               ),
             ),
           ],
@@ -359,7 +361,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     );
   }
 
-  /// Nội dung hiển thị thông tin sản phẩm trong mục giỏ hàng
   Widget _buildItemContent(
       String? thuongHieu,
       String? name,
@@ -368,7 +369,8 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
       int soLuong,
       int index,
       BuildContext context,
-      double arrowButtonSize) {
+      double arrowButtonSize,
+      ) {
     final double screenWidth = MediaQuery.of(context).size.width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,7 +423,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
           ],
         ),
         const SizedBox(height: 6),
-        // Chức năng tăng / giảm số lượng
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -451,7 +452,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     );
   }
 
-  /// Mã giảm giá
   Widget _buildCouponSection() {
     return Container(
       color: Colors.white,
@@ -481,7 +481,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     );
   }
 
-  /// Thanh tóm tắt bên dưới
   Widget _buildBottomBar() {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {

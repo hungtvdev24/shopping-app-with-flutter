@@ -47,12 +47,15 @@ class CartService {
     }
   }
 
-  /// Thêm sản phẩm vào giỏ hàng
-  static Future<Map<String, dynamic>> addToCart(String token, int productId, int quantity) async {
+  /// Thêm sản phẩm vào giỏ hàng với variation_id
+  static Future<Map<String, dynamic>> addToCart(String token, int productId, int quantity, int variationId) async {
     try {
       final response = await ApiClient.postData(
-        'cart/add/$productId',
-        {"soLuong": quantity},
+        'cart/add/$productId', // Điều chỉnh endpoint theo backend
+        {
+          "soLuong": quantity,
+          "variation_id": variationId,
+        },
         token: token,
       );
       if (response.containsKey('error')) {

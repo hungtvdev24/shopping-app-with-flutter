@@ -77,7 +77,7 @@ class CategoryDetailScreen extends StatelessWidget {
 
     final imageUrl = product['urlHinhAnh']?.toString().startsWith('http') == true
         ? product['urlHinhAnh']
-        : "https://72f7-104-28-254-73.ngrok-free.app/images/default.png";
+        : "https://6a67-42-117-88-252.ngrok-free.app/images/default.png";
     final thuongHieu = product['thuongHieu'] ?? "Không có thương hiệu";
     final tenSanPham = product['tenSanPham'] ?? "Không có tên";
     final double originalPrice = double.tryParse(product['gia'].toString()) ?? 0.0;

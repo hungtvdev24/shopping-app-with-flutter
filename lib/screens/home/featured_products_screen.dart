@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Để format tiền tệ
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/favorite_product_provider.dart';
 import '../../providers/product_provider.dart';
@@ -17,43 +17,48 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
   @override
   void initState() {
     super.initState();
-    // Lấy các provider cần thiết mà không lắng nghe trong initState
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final favoriteProvider = Provider.of<FavoriteProductProvider>(context, listen: false);
-    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final favoriteProvider = Provider.of<FavoriteProductProvider>(context, listen: false);
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
 
-    // Tải dữ liệu nếu có token
-    if (userProvider.token != null) {
-      favoriteProvider.loadFavoriteProducts(userProvider.token!);
-      productProvider.loadProducts(); // Tải danh sách sản phẩm gợi ý
-    }
+      if (userProvider.token != null) {
+        favoriteProvider.loadFavoriteProducts(userProvider.token!);
+        productProvider.loadProducts();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer2<FavoriteProductProvider, ProductProvider>(
       builder: (context, favoriteProvider, productProvider, child) {
-        // Xử lý trạng thái loading chung
         if (favoriteProvider.isLoading && productProvider.isLoading) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // Giao diện chính
         return Scaffold(
-          
           backgroundColor: Colors.white,
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // **Phần sản phẩm yêu thích**
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text(
+                        "Sản phẩm yêu thích",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       if (favoriteProvider.isLoading)
                         const Center(child: CircularProgressIndicator())
                       else if (favoriteProvider.errorMessage != null)
@@ -111,20 +116,26 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                             ),
                             itemBuilder: (context, index) {
                               final favorite = favoriteProvider.favorites[index];
-                              // Tìm sản phẩm gốc từ ProductProvider dựa trên id_sanPham
-                              final product = productProvider.products.firstWhere(
-                                    (prod) => prod['id_sanPham'] == favorite['id_sanPham'],
-                                orElse: () => favorite, // Nếu không tìm thấy, dùng dữ liệu từ favorite
+                              return _buildProductCard(
+                                context,
+                                favorite,
+                                isFavorite: true,
+                                onToggleFavorite: () {
+                                  final userProvider = Provider.of<UserProvider>(context, listen: false);
+                                  if (userProvider.token != null) {
+                                    favoriteProvider.removeFavoriteProduct(
+                                      userProvider.token!,
+                                      favorite['id_sanPham'],
+                                    );
+                                  }
+                                },
                               );
-                              return _buildProductCard(context, product, isFavorite: true);
                             },
                           ),
                     ],
                   ),
                 ),
-
-                // **Phần gợi ý sản phẩm**
-                _buildSuggestedProductsSection(productProvider, context),
+                _buildSuggestedProductsSection(context, productProvider, favoriteProvider),
               ],
             ),
           ),
@@ -133,8 +144,11 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
     );
   }
 
-  // **Widget hiển thị phần gợi ý sản phẩm**
-  Widget _buildSuggestedProductsSection(ProductProvider productProvider, BuildContext context) {
+  Widget _buildSuggestedProductsSection(
+      BuildContext context,
+      ProductProvider productProvider,
+      FavoriteProductProvider favoriteProvider,
+      ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -186,7 +200,30 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final product = productProvider.products[index];
-                  return _buildProductCard(context, product, isFavorite: false);
+                  final isFavorite = favoriteProvider.favorites.any(
+                        (fav) => fav['id_sanPham'] == product['id_sanPham'],
+                  );
+                  return _buildProductCard(
+                    context,
+                    product,
+                    isFavorite: isFavorite,
+                    onToggleFavorite: () {
+                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                      if (userProvider.token != null) {
+                        if (isFavorite) {
+                          favoriteProvider.removeFavoriteProduct(
+                            userProvider.token!,
+                            product['id_sanPham'],
+                          );
+                        } else {
+                          favoriteProvider.addFavoriteProduct(
+                            userProvider.token!,
+                            product['id_sanPham'],
+                          );
+                        }
+                      }
+                    },
+                  );
                 },
               ),
         ],
@@ -194,22 +231,40 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
     );
   }
 
-  // **Widget hiển thị thẻ sản phẩm**
-  Widget _buildProductCard(BuildContext context, dynamic product, {required bool isFavorite}) {
+  Widget _buildProductCard(
+      BuildContext context,
+      dynamic product, {
+        required bool isFavorite,
+        required VoidCallback onToggleFavorite,
+      }) {
     final formatCurrency = NumberFormat("#,###", "vi_VN");
 
-    // In URL để debug
-    print("Image URL for product ${product['tenSanPham']}: ${product['urlHinhAnh']}");
+    // Lấy URL hình ảnh từ variations
+    String imageUrl;
+    if (product['variations'] != null &&
+        product['variations'].isNotEmpty &&
+        product['variations'][0]['images'] != null &&
+        product['variations'][0]['images'].isNotEmpty) {
+      imageUrl = product['variations'][0]['images'][0]['image_url']?.toString() ??
+          "https://picsum.photos/400/200";
+    } else {
+      imageUrl = "https://picsum.photos/400/200";
+    }
 
-    // Lấy dữ liệu sản phẩm
-    final imageUrl = product['urlHinhAnh']?.toString().startsWith('http') == true
-        ? product['urlHinhAnh']
-        : "http://10.0.3.2:8001/images/default.png"; // Thay 10.0.3.2 bằng IP của bạn nếu cần
+    // Lấy size từ variations (nếu có)
+    String? size;
+    if (product['variations'] != null &&
+        product['variations'].isNotEmpty &&
+        product['variations'][0]['size'] != null) {
+      size = product['variations'][0]['size'].toString();
+    }
+
+    print("Image URL for product ${product['tenSanPham']}: $imageUrl");
+
     final thuongHieu = product['thuongHieu'] ?? "Không có thương hiệu";
     final tenSanPham = product['tenSanPham'] ?? "Không có tên";
     final double originalPrice = double.tryParse(product['gia'].toString()) ?? 0.0;
 
-    // Giả lập giảm giá
     const bool hasDiscount = true;
     const double discountPercent = 20;
     final double discountedPrice = originalPrice * (1 - discountPercent / 100);
@@ -219,10 +274,18 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
 
     return GestureDetector(
       onTap: () {
+        // Tạo dữ liệu sản phẩm để truyền vào ProductDetailScreen
+        final productDetail = {
+          'urlHinhAnh': imageUrl,
+          'thuongHieu': thuongHieu,
+          'tenSanPham': tenSanPham,
+          'gia': originalPrice,
+          'size': size,
+        };
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
+            builder: (context) => ProductDetailScreen(product: productDetail),
           ),
         );
       },
@@ -231,7 +294,6 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ảnh sản phẩm + tag giảm giá
             Stack(
               children: [
                 ClipRRect(
@@ -282,15 +344,20 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                       ),
                     ),
                   ),
-                if (isFavorite)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: const Icon(Icons.favorite, color: Colors.red, size: 24),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : Colors.grey,
+                      size: 24,
+                    ),
+                    onPressed: onToggleFavorite,
                   ),
+                ),
               ],
             ),
-            // Thông tin sản phẩm
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(8.0),
