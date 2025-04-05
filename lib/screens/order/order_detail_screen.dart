@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/myorder_provider.dart';
 import '../../providers/user_provider.dart';
 import '../product/product_detail_screen.dart';
+import '../product/review_screen.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -17,6 +18,7 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   final formatCurrency = NumberFormat("#,###", "vi_VN");
   late final DateFormat dateTimeFormat;
+  Map<int, bool> _hasReviewed = {};
 
   @override
   void initState() {
@@ -30,8 +32,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _loadOrderDetail() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final myOrderProvider = Provider.of<MyOrderProvider>(context, listen: false);
+
     if (userProvider.token != null) {
       await myOrderProvider.loadOrderDetail(userProvider.token!, widget.orderId);
+      if (myOrderProvider.orderDetail != null) {
+        final items = myOrderProvider.orderDetail!['chi_tiet_don_hang'] as List<dynamic>?;
+        if (items != null) {
+          for (var item in items) {
+            final productId = item['id_sanPham'] ?? 0;
+            final variationId = item['variation_id'] ?? 0;
+            final hasReviewed = await myOrderProvider.hasReviewedProduct(
+              userProvider.token!,
+              widget.orderId,
+              productId,
+              variationId,
+            );
+            setState(() {
+              _hasReviewed[productId] = hasReviewed;
+            });
+          }
+        }
+      }
     }
   }
 
@@ -99,7 +120,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 children: [
                   _buildOrderHeader(orderDetail, totalPrice),
                   const SizedBox(height: 16),
-                  _buildOrderItems(orderDetail['chi_tiet_don_hang'], context),
+                  _buildOrderItems(orderDetail['chi_tiet_don_hang'], context, orderStatus),
                   const SizedBox(height: 16),
                   _buildShippingInfo(orderDetail),
                   const SizedBox(height: 16),
@@ -167,7 +188,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildOrderItems(List<dynamic>? items, BuildContext context) {
+  Widget _buildOrderItems(List<dynamic>? items, BuildContext context, String orderStatus) {
     if (items == null || items.isEmpty) {
       return const Text(
         "Không có sản phẩm nào trong đơn hàng.",
@@ -188,20 +209,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           physics: const NeverScrollableScrollPhysics(),
           itemCount: items.length,
           itemBuilder: (context, index) {
-            return _buildOrderItem(items[index], context);
+            return _buildOrderItem(items[index], context, orderStatus);
           },
         ),
       ],
     );
   }
 
-  Widget _buildOrderItem(dynamic item, BuildContext context) {
+  Widget _buildOrderItem(dynamic item, BuildContext context, String orderStatus) {
     final String? thuongHieu = item['san_pham'] != null ? item['san_pham']['thuongHieu'] : null;
     final String? name = item['san_pham'] != null ? item['san_pham']['tenSanPham'] : null;
     final String? size = item['variation'] != null ? item['variation']['size'] : null;
     final double price = double.tryParse(item['gia']?.toString() ?? '0') ?? 0.0;
     final int quantity = item['soLuong'] ?? 1;
-    final int productId = item['id_sanPham'] ?? 0; // Lấy id_sanPham
+    final int productId = item['id_sanPham'] ?? 0;
+    final int variationId = item['variation_id'] ?? 0;
     final String? image = item['variation'] != null &&
         item['variation']['images'] != null &&
         (item['variation']['images'] as List).isNotEmpty
@@ -210,129 +232,179 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     final double screenWidth = MediaQuery.of(context).size.width;
     final double imageSize = screenWidth * 0.15;
+    final bool hasReviewed = _hasReviewed[productId] ?? false;
 
-    return GestureDetector(
-      onTap: () {
-        final productDetail = {
-          'id_sanPham': productId,
-          'urlHinhAnh': image ?? "https://picsum.photos/150",
-          'thuongHieu': thuongHieu,
-          'tenSanPham': name,
-          'gia': price,
-          'size': size,
-        };
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: productDetail),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-              child: Image.network(
-                image ?? "https://picsum.photos/150",
-                width: imageSize,
-                height: imageSize,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Failed to load image: $image, error: $error');
-                  return Container(
-                    color: Colors.grey[300],
-                    alignment: Alignment.center,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: () {
+              final productDetail = {
+                'id_sanPham': productId,
+                'urlHinhAnh': image ?? "https://picsum.photos/150",
+                'thuongHieu': thuongHieu,
+                'tenSanPham': name,
+                'gia': price,
+                'size': size,
+              };
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailScreen(product: productDetail),
+                ),
+              );
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                  child: Image.network(
+                    image ?? "https://picsum.photos/150",
                     width: imageSize,
                     height: imageSize,
-                    child: const Text('No Image', style: TextStyle(fontFamily: 'Roboto')),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return SizedBox(
-                    width: imageSize,
-                    height: imageSize,
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                },
-              ),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('Failed to load image: $image, error: $error');
+                      return Container(
+                        color: Colors.grey[300],
+                        alignment: Alignment.center,
+                        width: imageSize,
+                        height: imageSize,
+                        child: const Text('No Image', style: TextStyle(fontFamily: 'Roboto')),
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return SizedBox(
+                        width: imageSize,
+                        height: imageSize,
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          thuongHieu ?? "Không có thương hiệu",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.028,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Roboto',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          name ?? "Không có tên",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.032,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            fontFamily: 'Roboto',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        if (size != null)
+                          Text(
+                            "Size: $size",
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.032,
+                              color: Colors.grey[600],
+                              fontFamily: 'Roboto',
+                            ),
+                          ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Số lượng: $quantity",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.032,
+                            color: Colors.grey[600],
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "${formatCurrency.format(price)} ₫",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.034,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            fontFamily: 'Roboto',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      thuongHieu ?? "Không có thương hiệu",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.028,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Roboto',
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      name ?? "Không có tên",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.032,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        fontFamily: 'Roboto',
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    if (size != null)
-                      Text(
-                        "Size: $size",
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.032,
-                          color: Colors.grey[600],
-                          fontFamily: 'Roboto',
+          ),
+          if (orderStatus == 'da_giao')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: hasReviewed
+                    ? const Text(
+                  "Đã đánh giá",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 14,
+                    fontFamily: 'Roboto',
+                  ),
+                )
+                    : ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewScreen(
+                          orderId: widget.orderId,
+                          productId: productId,
+                          variationId: variationId,
                         ),
                       ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Số lượng: $quantity",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.032,
-                        color: Colors.grey[600],
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      "${formatCurrency.format(price)} ₫",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.034,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        fontFamily: 'Roboto',
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ).then((value) {
+                      if (value == true) {
+                        setState(() {
+                          _hasReviewed[productId] = true;
+                        });
+                      }
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text(
+                    "Đánh giá",
+                    style: TextStyle(color: Colors.white, fontFamily: 'Roboto', fontSize: 14),
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -421,8 +493,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Tổng thanh toán", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Roboto')),
-                Text("${formatCurrency.format(totalPrice)} ₫",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87, fontFamily: 'Roboto')),
+                Text(
+                  "${formatCurrency.format(totalPrice)} ₫",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87, fontFamily: 'Roboto'),
+                ),
               ],
             ),
           ],
@@ -440,11 +514,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           final success = await orderProvider.cancelOrder(userProvider.token!, widget.orderId);
           if (success) {
             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Đã hủy đơn hàng thành công!", style: TextStyle(fontFamily: 'Roboto'))));
+              const SnackBar(content: Text("Đã hủy đơn hàng thành công!", style: TextStyle(fontFamily: 'Roboto'))),
+            );
             await _loadOrderDetail();
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(orderProvider.errorMessage ?? "Lỗi khi hủy đơn hàng", style: const TextStyle(fontFamily: 'Roboto'))));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(orderProvider.errorMessage ?? "Lỗi khi hủy đơn hàng", style: const TextStyle(fontFamily: 'Roboto')),
+              ),
+            );
           }
         },
         style: ElevatedButton.styleFrom(

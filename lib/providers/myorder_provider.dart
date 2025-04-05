@@ -44,8 +44,7 @@ class MyOrderProvider extends ChangeNotifier {
 
     try {
       await MyOrderService.cancelOrder(token, orderId);
-      // Sau khi hủy thành công, cập nhật lại danh sách đơn hàng hoặc chi tiết đơn hàng nếu cần
-      await loadOrders(token); // Tùy chọn: Cập nhật toàn bộ danh sách
+      await loadOrders(token); // Cập nhật danh sách đơn hàng
       return true;
     } catch (e) {
       errorMessage = e.toString();
@@ -53,6 +52,15 @@ class MyOrderProvider extends ChangeNotifier {
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> hasReviewedProduct(String token, int orderId, int productId, int variationId) async {
+    try {
+      return await MyOrderService.hasReviewedProduct(token, orderId, productId, variationId);
+    } catch (e) {
+      errorMessage = e.toString();
+      return false;
     }
   }
 }
