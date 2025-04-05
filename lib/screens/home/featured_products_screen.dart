@@ -56,6 +56,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
+                          fontFamily: 'Roboto',
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -70,6 +71,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
+                              fontFamily: 'Roboto',
                             ),
                           ),
                         )
@@ -78,7 +80,11 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                           children: [
                             Text(
                               favoriteProvider.errorMessage!,
-                              style: const TextStyle(color: Colors.red, fontSize: 16),
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 16,
+                                fontFamily: 'Roboto',
+                              ),
                             ),
                             const SizedBox(height: 20),
                             ElevatedButton(
@@ -88,7 +94,25 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                                   favoriteProvider.loadFavoriteProducts(userProvider.token!);
                                 }
                               },
-                              child: const Text("Thử lại"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  side: const BorderSide(color: Colors.black),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                "Thử lại",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                  fontFamily: 'Roboto',
+                                ),
+                              ),
                             ),
                           ],
                         )
@@ -100,6 +124,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
+                                fontFamily: 'Roboto',
                               ),
                             ),
                           )
@@ -160,6 +185,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
+              fontFamily: 'Roboto',
             ),
           ),
           const SizedBox(height: 10),
@@ -173,19 +199,45 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
               children: [
                 Text(
                   productProvider.errorMessage!,
-                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontFamily: 'Roboto',
+                  ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => productProvider.loadProducts(),
-                  child: const Text("Thử lại"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      side: const BorderSide(color: Colors.black),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    "Thử lại",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                      fontFamily: 'Roboto',
+                    ),
+                  ),
                 ),
               ],
             )
           else if (productProvider.products.isEmpty)
               const Text(
                 "Không có sản phẩm nào",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  fontFamily: 'Roboto',
+                ),
               )
             else
               GridView.builder(
@@ -259,18 +311,19 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
       size = product['variations'][0]['size'].toString();
     }
 
+    // Lấy giá từ variation nếu có, nếu không thì lấy từ product['gia']
+    final double price = product['variations'] != null &&
+        product['variations'].isNotEmpty &&
+        product['variations'][0]['price'] != null
+        ? (double.tryParse(product['variations'][0]['price'].toString()) ?? 0.0)
+        : (double.tryParse(product['gia'].toString()) ?? 0.0);
+
+    final priceText = "${formatCurrency.format(price)} VNĐ";
+
     print("Image URL for product ${product['tenSanPham']}: $imageUrl");
 
     final thuongHieu = product['thuongHieu'] ?? "Không có thương hiệu";
     final tenSanPham = product['tenSanPham'] ?? "Không có tên";
-    final double originalPrice = double.tryParse(product['gia'].toString()) ?? 0.0;
-
-    const bool hasDiscount = true;
-    const double discountPercent = 20;
-    final double discountedPrice = originalPrice * (1 - discountPercent / 100);
-
-    final discountedPriceText = "${formatCurrency.format(discountedPrice)} ₫";
-    final originalPriceText = "${formatCurrency.format(originalPrice)} ₫";
 
     return GestureDetector(
       onTap: () {
@@ -279,8 +332,13 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
           'urlHinhAnh': imageUrl,
           'thuongHieu': thuongHieu,
           'tenSanPham': tenSanPham,
-          'gia': originalPrice,
+          'gia': price,
           'size': size,
+          'id_sanPham': product['id_sanPham'],
+          'id_danhMuc': product['id_danhMuc'],
+          'moTa': product['moTa'] ?? "Không có mô tả",
+          'soSaoDanhGia': product['soSaoDanhGia'] ?? 0,
+          'variations': product['variations'] ?? [],
         };
         Navigator.push(
           context,
@@ -290,7 +348,13 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.black.withOpacity(0.2), // Viền đen mỏng, hơi nhạt
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(12), // Bo góc
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -298,8 +362,8 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
                   ),
                   child: Image.network(
                     imageUrl,
@@ -324,26 +388,26 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                     },
                   ),
                 ),
-                if (hasDiscount)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        "$discountPercent% GIẢM",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCE4EC), // Màu hồng nhạt
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      "Like",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Roboto',
                       ),
                     ),
                   ),
+                ),
                 Positioned(
                   top: 8,
                   right: 8,
@@ -363,8 +427,8 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                 padding: const EdgeInsets.all(8.0),
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
                   ),
                   color: Colors.white,
                 ),
@@ -377,6 +441,7 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                         fontSize: 12,
                         color: Colors.grey,
                         fontWeight: FontWeight.w500,
+                        fontFamily: 'Roboto',
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -388,39 +453,21 @@ class _FeaturedProductsScreenState extends State<FeaturedProductsScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
+                        fontFamily: 'Roboto',
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            discountedPriceText,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (hasDiscount) ...[
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              originalPriceText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      priceText,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontFamily: 'Roboto',
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

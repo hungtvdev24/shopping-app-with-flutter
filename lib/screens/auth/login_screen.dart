@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isLoading = false;
   String? errorMessage;
-  bool _obscurePassword = true; // To toggle password visibility
+  bool _obscurePassword = true;
 
   @override
   void didChangeDependencies() {
@@ -74,12 +74,11 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Stack(
           children: [
-            // PHẦN TRÊN (nền hồng, chứa hình minh hoạ)
             Container(
               height: 280,
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: Color(0xFFFCE4EC), // Màu hồng nhạt
+                color: Color(0xFFFCE4EC),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
@@ -90,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Image.asset(
-                      'assets/login_header.png', // Giữ nguyên hình ảnh của bạn
+                      'assets/login_header.png',
                       height: 280,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
@@ -100,7 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            // Close button at the top-left
             Positioned(
               top: 16,
               left: 16,
@@ -111,31 +109,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
             ),
-            // PHẦN DƯỚI (Form đăng nhập)
             Padding(
-              padding: const EdgeInsets.only(top: 280), // Đẩy form xuống dưới banner
+              padding: const EdgeInsets.only(top: 280),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
                     const Text(
                       "Đăng nhập",
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
-                        fontFamily: 'Roboto', // Sử dụng font Roboto
+                        fontFamily: 'Roboto',
                       ),
                     ),
                     const SizedBox(height: 24),
-
                     Form(
                       key: _formKey,
                       child: Column(
                         children: [
-                          // Email
                           TextFormField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -154,8 +148,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: const TextStyle(fontFamily: 'Roboto'),
                           ),
                           const SizedBox(height: 16),
-
-                          // Password
                           TextFormField(
                             controller: passwordController,
                             obscureText: _obscurePassword,
@@ -185,8 +177,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: const TextStyle(fontFamily: 'Roboto'),
                           ),
                           const SizedBox(height: 24),
-
-                          // Error Message
                           if (errorMessage != null)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -199,8 +189,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
-
-                          // Login Button
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -231,14 +219,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
-                          // Forgot Password and Register Links
                           Center(
                             child: Column(
                               children: [
                                 TextButton(
                                   onPressed: () {
-                                    // Handle forgot password
+                                    Navigator.pushNamed(context, AppRoutes.forgotPassword);
                                   },
                                   child: const Text(
                                     "Quên mật khẩu?",

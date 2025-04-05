@@ -22,6 +22,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int quantity = 1;
   int currentImageIndex = 0;
   late PageController _pageController;
+  int visibleReviewsCount = 3; // Số lượng đánh giá hiển thị ban đầu
 
   @override
   void initState() {
@@ -173,7 +174,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                       const SizedBox(width: 16),
                       Text(
-                        "${NumberFormat("#,###", "vi_VN").format(price)} ₫",
+                        "${NumberFormat("#,###", "vi_VN").format(price)} VNĐ",
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -408,37 +409,153 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildSuggestedProductCard(BuildContext context, Map<String, dynamic> product) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.network(
-            product['urlHinhAnh'] ?? "http://10.0.3.2:8001/images/default.png",
-            height: 120,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+    final formatCurrency = NumberFormat("#,###", "vi_VN");
+    final imageUrl = product['variations'] != null &&
+        product['variations'].isNotEmpty &&
+        product['variations'][0]['images'] != null &&
+        product['variations'][0]['images'].isNotEmpty
+        ? product['variations'][0]['images'][0]['image_url']?.toString() ?? "https://picsum.photos/400/200"
+        : "https://picsum.photos/400/200";
+    final thuongHieu = product['thuongHieu'] ?? "Không có thương hiệu";
+    final tenSanPham = product['tenSanPham'] ?? "Không có tên";
+    final double originalPrice = double.tryParse(product['gia'].toString()) ?? 0.0;
+    final originalPriceText = "${formatCurrency.format(originalPrice)} VNĐ";
+
+    return GestureDetector(
+      onTap: () {
+        final productDetail = {
+          'urlHinhAnh': imageUrl,
+          'thuongHieu': thuongHieu,
+          'tenSanPham': tenSanPham,
+          'gia': originalPrice,
+          'id_sanPham': product['id_sanPham'],
+          'id_danhMuc': product['id_danhMuc'],
+          'moTa': product['moTa'] ?? "Không có mô tả",
+          'soSaoDanhGia': product['soSaoDanhGia'] ?? 0,
+        };
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(product: productDetail),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.black.withOpacity(0.2), // Viền đen mỏng, hơi nhạt
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(12), // Bo góc
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
               children: [
-                Text(
-                  product['tenSanPham'] ?? "Không có tên",
-                  style: const TextStyle(fontSize: 14, fontFamily: 'Roboto'),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                  child: Image.network(
+                    imageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      print("Error loading image for ${product['tenSanPham']}: $error");
+                      return Container(
+                        height: 120,
+                        color: Colors.grey[300],
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.error, size: 50),
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const SizedBox(
+                        height: 120,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  "${NumberFormat("#,###", "vi_VN").format(double.tryParse(product['gia'].toString()) ?? 0.0)} ₫",
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCE4EC), // Màu hồng nhạt
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      "Like",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Roboto',
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      thuongHieu,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Roboto',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      tenSanPham,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontFamily: 'Roboto',
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Text(
+                      originalPriceText,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        fontFamily: 'Roboto',
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -577,7 +694,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         const SizedBox(height: 16),
                       ],
                       Text(
-                        "${NumberFormat("#,###", "vi_VN").format(selectedVariation != null ? (double.tryParse(selectedVariation!['price'].toString()) ?? 0.0) : (double.tryParse(widget.product['gia'].toString()) ?? 0.0))} ₫",
+                        "${NumberFormat("#,###", "vi_VN").format(selectedVariation != null ? (double.tryParse(selectedVariation!['price'].toString()) ?? 0.0) : (double.tryParse(widget.product['gia'].toString()) ?? 0.0))} VNĐ",
                         style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -623,71 +740,96 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontFamily: 'Roboto'),
                             );
                           }
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: productProvider.reviews.length,
-                            itemBuilder: (context, index) {
-                              final review = productProvider.reviews[index];
-                              final userName = review['user'] != null && review['user']['name'] != null
-                                  ? review['user']['name']
-                                  : "Người dùng ẩn danh";
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            userName,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                fontFamily: 'Roboto',
-                                                color: Colors.black),
-                                          ),
-                                          const Spacer(),
-                                          Row(
-                                            children: List.generate(
-                                              (review['soSao'] as int?) ?? 0,
-                                                  (i) => const Icon(Icons.star, color: Colors.yellow, size: 16),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: visibleReviewsCount > productProvider.reviews.length
+                                    ? productProvider.reviews.length
+                                    : visibleReviewsCount,
+                                itemBuilder: (context, index) {
+                                  final review = productProvider.reviews[index];
+                                  final userName = review['user'] != null && review['user']['name'] != null
+                                      ? review['user']['name']
+                                      : "Người dùng ẩn danh";
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.all(16.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200], // Nền màu xám
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              userName,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  fontFamily: 'Roboto',
+                                                  color: Colors.black),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        review['binhLuan'] ?? "Không có bình luận",
-                                        style: const TextStyle(fontSize: 16, fontFamily: 'Roboto', color: Colors.black87),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      if (review['urlHinhAnh'] != null)
-                                        Image.network(
-                                          review['urlHinhAnh'],
-                                          height: 100,
-                                          width: 100,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                                            const Spacer(),
+                                            Row(
+                                              children: List.generate(
+                                                (review['soSao'] as int?) ?? 0,
+                                                    (i) => const Icon(Icons.star, color: Colors.yellow, size: 16),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(review['created_at'])),
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Roboto'),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          review['binhLuan'] ?? "Không có bình luận",
+                                          style: const TextStyle(fontSize: 16, fontFamily: 'Roboto', color: Colors.black87),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (review['urlHinhAnh'] != null)
+                                          Image.network(
+                                            review['urlHinhAnh'],
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                                          ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(review['created_at'])),
+                                          style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Roboto'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                              if (visibleReviewsCount < productProvider.reviews.length)
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      visibleReviewsCount += 3;
+                                    });
+                                  },
+                                  child: const Text(
+                                    "Xem thêm",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 16,
+                                      fontFamily: 'Roboto',
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
+                            ],
                           );
                         },
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        "Sản phẩm tương tự",
+                        "Có thể bạn sẽ thích",
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -716,20 +858,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontFamily: 'Roboto'),
                             );
                           }
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: suggestedProducts.length > 2 ? 2 : suggestedProducts.length,
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 0.75,
-                            ),
-                            itemBuilder: (context, index) {
-                              final suggestedProduct = suggestedProducts[index];
-                              return _buildSuggestedProductCard(context, suggestedProduct);
-                            },
+                          return Column(
+                            children: [
+                              SizedBox(
+                                height: 220,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: suggestedProducts.length > 4 ? 4 : suggestedProducts.length,
+                                  itemBuilder: (context, index) {
+                                    final suggestedProduct = suggestedProducts[index];
+                                    return Container(
+                                      width: 150,
+                                      margin: const EdgeInsets.only(right: 12),
+                                      child: _buildSuggestedProductCard(context, suggestedProduct),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              if (suggestedProducts.length > 4)
+                                SizedBox(
+                                  height: 220,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: suggestedProducts.length > 8 ? 4 : suggestedProducts.length - 4,
+                                    itemBuilder: (context, index) {
+                                      final suggestedProduct = suggestedProducts[index + 4];
+                                      return Container(
+                                        width: 150,
+                                        margin: const EdgeInsets.only(right: 12),
+                                        child: _buildSuggestedProductCard(context, suggestedProduct),
+                                      );
+                                    },
+                                  ),
+                                ),
+                            ],
                           );
                         },
                       ),
@@ -760,12 +923,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.black),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            minimumSize: const Size(0, 40),
+                            padding: const EdgeInsets.symmetric(vertical: 16), // Đảm bảo chiều cao bằng nhau
+                            minimumSize: const Size(0, 50),
                           ),
                           child: Icon(
                             isFavorite ? Icons.favorite : Icons.favorite_border,
                             color: isFavorite ? Colors.red : Colors.black,
+                            size: 24,
                           ),
                         );
                       },
@@ -779,12 +943,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.black),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(vertical: 16), // Đảm bảo chiều cao bằng nhau
+                        minimumSize: const Size(0, 50),
                       ),
-                      child: const Text(
-                        "Thêm vào giỏ",
-                        style: TextStyle(color: Colors.black, fontFamily: 'Roboto', fontSize: 14),
+                      child: const Icon(
+                        Icons.shopping_cart,
+                        color: Colors.black,
+                        size: 24,
                       ),
                     ),
                   ),
@@ -796,8 +961,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.black),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(vertical: 16), // Đảm bảo chiều cao bằng nhau
+                        minimumSize: const Size(0, 50),
                       ),
                       child: const Text(
                         "Mua ngay",

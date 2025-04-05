@@ -38,6 +38,15 @@ flutter:
   assets:
     - assets/avatar.png
     - assets/login_header.png
+    - assets/anh11.png
+    - assets/anh12.png
+    - assets/anh13.png
+    - assets/anh14.png
+    - assets/anh15.png
+    - assets/anh16.png
+    - assets/anh17.png
+    - assets/anh18.png
+    - assets/anh19.png
     - assets/images/anh1.png
     - assets/images/anh2.png
     - assets/images/anh3.png

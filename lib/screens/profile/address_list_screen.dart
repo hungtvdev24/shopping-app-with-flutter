@@ -37,16 +37,29 @@ class _AddressListScreenState extends State<AddressListScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             "Xác nhận xóa",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              fontFamily: 'Roboto',
+            ),
           ),
-          content: const Text("Bạn có chắc muốn xóa địa chỉ này không?"),
+          content: const Text(
+            "Bạn có chắc muốn xóa địa chỉ này không?",
+            style: TextStyle(fontFamily: 'Roboto'),
+          ),
           actions: [
             TextButton(
-              child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+              child: const Text(
+                "Hủy",
+                style: TextStyle(color: Colors.grey, fontFamily: 'Roboto'),
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
-              child: const Text("Xóa", style: TextStyle(color: Colors.red)),
+              child: const Text(
+                "Xóa",
+                style: TextStyle(color: Colors.red, fontFamily: 'Roboto'),
+              ),
               onPressed: () async {
                 Navigator.of(context).pop();
                 try {
@@ -80,32 +93,26 @@ class _AddressListScreenState extends State<AddressListScreen> {
     final addresses = addressProvider.addresses;
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           "Địa chỉ giao hàng",
           style: TextStyle(
-            color: Colors.black87,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
-            fontSize: 22,
+            fontSize: 20,
+            fontFamily: 'Roboto',
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Colors.grey[300],
-            height: 1,
-          ),
-        ),
+        iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: true,
       ),
       body: addressProvider.isLoading
           ? const Center(
         child: CircularProgressIndicator(
-          color: Colors.blue,
-          strokeWidth: 3,
+          color: Colors.black,
         ),
       )
           : addressProvider.errorMessage != null
@@ -127,11 +134,12 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   color: Colors.red,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
+                  fontFamily: 'Roboto',
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
+              ElevatedButton(
                 onPressed: () {
                   final userProvider = Provider.of<UserProvider>(context, listen: false);
                   final token = userProvider.token;
@@ -140,17 +148,23 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
+                    side: const BorderSide(color: Colors.black),
                   ),
-                  elevation: 3,
+                  elevation: 0,
                 ),
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                label: const Text(
+                child: const Text(
                   "Thử lại",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                    fontFamily: 'Roboto',
+                  ),
                 ),
               ),
             ],
@@ -179,6 +193,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                         color: Colors.grey,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'Roboto',
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -187,10 +202,11 @@ class _AddressListScreenState extends State<AddressListScreen> {
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 16,
+                        fontFamily: 'Roboto',
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton.icon(
+                    ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -200,20 +216,22 @@ class _AddressListScreenState extends State<AddressListScreen> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 24),
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
+                          side: const BorderSide(color: Colors.black),
                         ),
-                        elevation: 3,
+                        elevation: 0,
                       ),
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      label: const Text(
+                      child: const Text(
                         "Thêm địa chỉ ngay",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                          fontFamily: 'Roboto',
                         ),
                       ),
                     ),
@@ -239,7 +257,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                         children: [
                           const Icon(
                             Icons.location_on,
-                            color: Colors.blue,
+                            color: Colors.pink,
                             size: 30,
                           ),
                           const SizedBox(width: 16),
@@ -253,6 +271,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
                                     color: Colors.black87,
+                                    fontFamily: 'Roboto',
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -261,6 +280,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                   style: TextStyle(
                                     color: Colors.grey[700],
                                     fontSize: 14,
+                                    fontFamily: 'Roboto',
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -269,6 +289,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                   style: TextStyle(
                                     color: Colors.grey[700],
                                     fontSize: 14,
+                                    fontFamily: 'Roboto',
                                   ),
                                 ),
                               ],
@@ -277,7 +298,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                           Column(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon: const Icon(Icons.edit, color: Colors.pink),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -305,7 +326,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              child: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -313,20 +334,22 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
+                    side: const BorderSide(color: Colors.black),
                   ),
-                  elevation: 3,
+                  elevation: 0,
                 ),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
+                child: const Text(
                   "Thêm Địa Chỉ Mới",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                    fontFamily: 'Roboto',
                   ),
                 ),
               ),
@@ -381,26 +404,21 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           widget.address == null ? "Thêm địa chỉ" : "Sửa địa chỉ",
           style: const TextStyle(
-            color: Colors.black87,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
-            fontSize: 22,
+            fontSize: 20,
+            fontFamily: 'Roboto',
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Colors.grey[300],
-            height: 1,
-          ),
-        ),
+        iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -420,6 +438,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
+                      fontFamily: 'Roboto',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -435,19 +454,22 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                     child: ElevatedButton(
                       onPressed: () => _onSubmit(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
+                          side: const BorderSide(color: Colors.black),
                         ),
-                        elevation: 3,
+                        elevation: 0,
                       ),
                       child: Text(
                         widget.address == null ? "Lưu" : "Cập nhật",
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                          fontFamily: 'Roboto',
                         ),
                       ),
                     ),
@@ -467,24 +489,15 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.grey),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.blue, width: 2),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
+          hintText: label,
           filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
         ),
+        style: const TextStyle(fontFamily: 'Roboto'),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
             return "Vui lòng nhập $label";
