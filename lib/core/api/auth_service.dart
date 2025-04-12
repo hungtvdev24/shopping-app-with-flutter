@@ -1,13 +1,11 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_client.dart';
 
 class AuthService {
-  static const String baseUrl = "https://6a67-42-117-88-252.ngrok-free.app/api";
   static const String _tokenKey = 'auth_token';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final response = await _postData('login', {"email": email, "password": password});
+    final response = await ApiClient.postData('login', {"email": email, "password": password});
     if (response.containsKey('token')) {
       // Lưu token sau khi đăng nhập thành công
       await saveToken(response['token']);
@@ -16,7 +14,7 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> register(String name, String email, String phone, String password) async {
-    final response = await _postData('register', {
+    final response = await ApiClient.postData('register', {
       "name": name,
       "email": email,
       "phone": phone,
@@ -27,29 +25,6 @@ class AuthService {
       await saveToken(response['token']);
     }
     return response;
-  }
-
-  Future<Map<String, dynamic>> _postData(String endpoint, Map<String, dynamic> data) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/$endpoint'),
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 10));
-
-      final responseData = jsonDecode(response.body);
-      print('POST $endpoint Response: ${response.statusCode} - ${response.body}');
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return responseData;
-      } else {
-        return {"error": responseData["message"] ?? "Lỗi không xác định"};
-      }
-    } catch (e) {
-      return {"error": "Không thể kết nối đến server. Kiểm tra mạng hoặc API: $e"};
-    }
   }
 
   // Lưu token vào shared_preferences
@@ -68,5 +43,14 @@ class AuthService {
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+  }
+
+  // Lấy thông tin người dùng hiện tại
+  Future<Map<String, dynamic>> getUser() async {
+    try {
+      return await ApiClient.getUser();
+    } catch (e) {
+      throw Exception('Lỗi khi lấy thông tin người dùng: $e');
+    }
   }
 }

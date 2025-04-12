@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart'; // Thêm import này
+import 'package:intl/date_symbol_data_local.dart';
 
 // Import các provider
 import 'providers/auth_provider.dart';
@@ -16,6 +16,7 @@ import 'providers/category_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/recent_products_provider.dart';
 import 'providers/review_provider.dart';
+import 'providers/chat_provider.dart';
 
 // Import file routes
 import 'routes.dart';
@@ -25,7 +26,7 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('vi_VN', null); // Khởi tạo định dạng ngày giờ cho tiếng Việt
+  await initializeDateFormatting('vi_VN', null);
   runApp(
     MultiProvider(
       providers: [
@@ -41,6 +42,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
         ChangeNotifierProvider(create: (context) => RecentProductsProvider()),
         ChangeNotifierProvider(create: (context) => ReviewProvider()),
+        ChangeNotifierProvider(create: (context) => ChatProvider()),
       ],
       child: const MyApp(),
     ),
@@ -50,9 +52,12 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Ứng dụng bán hàng',
       theme: ThemeData(primarySwatch: Colors.blue),
