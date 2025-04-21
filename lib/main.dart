@@ -17,6 +17,7 @@ import 'providers/notification_provider.dart';
 import 'providers/recent_products_provider.dart';
 import 'providers/review_provider.dart';
 import 'providers/chat_provider.dart';
+import 'providers/voucher_provider.dart'; // Thêm VoucherProvider
 
 // Import file routes
 import 'routes.dart';
@@ -43,6 +44,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => RecentProductsProvider()),
         ChangeNotifierProvider(create: (context) => ReviewProvider()),
         ChangeNotifierProvider(create: (context) => ChatProvider()),
+        ChangeNotifierProvider(create: (context) => VoucherProvider()), // Thêm VoucherProvider
       ],
       child: const MyApp(),
     ),

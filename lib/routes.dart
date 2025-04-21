@@ -20,7 +20,8 @@ import 'screens/product/review_screen.dart';
 import 'screens/product/product_detail_screen.dart';
 import 'screens/order/order_screen.dart';
 import 'screens/profile/chat_screen.dart';
-import 'screens/profile/admin_list_screen.dart'; // Thay UserListScreen bằng AdminListScreen
+import 'screens/profile/admin_list_screen.dart';
+import 'screens/profile/voucher_list_screen.dart'; // Thêm VoucherListScreen
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -41,7 +42,8 @@ class AppRoutes {
   static const String productDetail = '/product-detail';
   static const String review = '/review';
   static const String chat = '/chat';
-  static const String adminList = '/admin-list'; // Thay userList thành adminList
+  static const String adminList = '/admin-list';
+  static const String voucherList = '/voucher-list'; // Thêm route mới
 }
 
 Map<String, WidgetBuilder> appRoutes = {
@@ -91,5 +93,6 @@ Map<String, WidgetBuilder> appRoutes = {
       receiver: args['receiver'],
     );
   },
-  AppRoutes.adminList: (context) => const AdminListScreen(), // Thay UserListScreen bằng AdminListScreen
+  AppRoutes.adminList: (context) => const AdminListScreen(),
+  AppRoutes.voucherList: (context) => const VoucherListScreen(), // Thêm route mới
 };
