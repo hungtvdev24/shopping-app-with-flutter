@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/api/auth_service.dart';
 import '../../routes.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -71,6 +72,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
       body: Consumer<NotificationProvider>(
         builder: (context, provider, child) {
+          debugPrint('Notifications in provider: ${provider.notifications}'); // Log danh sách thông báo
+          debugPrint('Is loading: ${provider.isLoading}, Error: ${provider.error}');
+
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
