@@ -8,31 +8,42 @@ class ApiClient {
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    final token = prefs.getString('auth_token');
+    print('Get token: $token');
+    return token;
   }
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
+    print('Token saved: $token');
   }
 
   static Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    print('Token cleared');
   }
 
   static Future<Map<String, dynamic>> postData(String url, Map<String, dynamic> data, {String? token}) async {
     try {
-      token ??= await getToken();
-      if (token == null) {
-        throw Exception("Không tìm thấy token. Vui lòng đăng nhập lại.");
+      // Bỏ qua kiểm tra token cho /api/login
+      final isLoginRequest = url.contains('login');
+      if (!isLoginRequest) {
+        token ??= await getToken();
+        if (token == null) {
+          throw Exception("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        }
       }
+
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "ngrok-skip-browser-warning": "true",
-        "Authorization": "Bearer $token",
       };
+      if (!isLoginRequest && token != null) {
+        headers["Authorization"] = "Bearer $token";
+      }
 
       final fullUrl = url.startsWith('http') ? url : "$baseUrl/$url";
 

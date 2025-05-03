@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/recent_products_provider.dart';
 import '../../routes.dart';
+import '../../core/models/user.dart'; // Thêm import để sử dụng User
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -376,7 +377,17 @@ class ProfileScreen extends StatelessWidget {
           Icons.chat,
           "Chat với Admin",
               () {
-            Navigator.pushNamed(context, AppRoutes.adminList);
+            // Điều hướng trực tiếp đến ChatScreen với admin mặc định
+            final admin = User(
+              id: 1, // Giả sử admin có id=1, thay đổi nếu cần
+              name: 'Admin',
+              email: 'admin1@example.com',
+            );
+            Navigator.pushNamed(
+              context,
+              AppRoutes.chat,
+              arguments: {'receiver': admin},
+            );
           },
         ),
         _buildProfileOption(
