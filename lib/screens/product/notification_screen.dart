@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
-import '../../providers/notification_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../core/api/auth_service.dart';
 import '../../core/models/user.dart';
 import '../../core/api/pusher_service.dart';
-import '../../routes.dart'; // Thêm import routes.dart
-import 'package:flutter/foundation.dart'; // For debugPrint
+import '../../routes.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key}); // Loại bỏ const nếu không cần thiết
+  const NotificationScreen({super.key});
 
   @override
   _NotificationScreenState createState() => _NotificationScreenState();
@@ -43,11 +41,21 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
         setState(() {
           _token = token;
         });
-        // Tải thông báo
-        Provider.of<NotificationProvider>(context, listen: false)
-            .fetchNotifications(token);
-        // Khởi tạo nhắn tin
+        // Khởi tạo nhắn tin và thông báo
         _initializeChat();
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Không tìm thấy token. Vui lòng đăng nhập lại.")),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      }
+    }).catchError((e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Lỗi lấy token: $e")),
+        );
       }
     });
   }
@@ -57,7 +65,6 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
     try {
       if (_token == null) {
         if (!mounted) return;
-        debugPrint('Không tìm thấy token');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Không tìm thấy token. Vui lòng đăng nhập lại.")),
         );
@@ -65,18 +72,17 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
       }
 
       final user = await authService.getUser();
-      debugPrint('User data: $user');
-      _currentUserId = user['id'];
+      _currentUserId = user['user']['id'];
       if (_currentUserId == null) {
         if (!mounted) return;
-        debugPrint('Không thể lấy ID người dùng');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Không thể lấy thông tin người dùng.")),
         );
         return;
       }
-      debugPrint('Current User ID: $_currentUserId');
 
+      // Tải thông báo và tin nhắn
+      await _chatProvider.fetchNotifications(_currentUserId!, context);
       _pusherService = PusherService();
       await _pusherService.initPusher(_currentUserId!, _chatProvider);
       _isPusherInitialized = true;
@@ -88,9 +94,8 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      debugPrint("Lỗi khởi tạo nhắn tin: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi khởi tạo nhắn tin: $e")),
+        SnackBar(content: Text("Lỗi khởi tạo: $e")),
       );
     } finally {
       if (mounted) {
@@ -111,17 +116,14 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      debugPrint('Cuộn xuống cuối danh sách tin nhắn');
       _scrollController.animateTo(
         0.0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     } else {
-      debugPrint('ScrollController chưa sẵn sàng, thử lại sau khi build');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
-          debugPrint('Cuộn xuống cuối danh sách tin nhắn sau khi build');
           _scrollController.animateTo(
             0.0,
             duration: const Duration(milliseconds: 300),
@@ -134,8 +136,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
 
   void _sendMessage() {
     final content = _messageController.text.trim();
-    if (content.isNotEmpty) {
-      debugPrint('Gửi tin nhắn: $content');
+    if (content.isNotEmpty && _currentUserId != null) {
       _chatProvider.sendMessage(_admin.id, content, _currentUserId!, context,
           receiverType: 'App\\Models\\Admin');
       _messageController.clear();
@@ -143,7 +144,9 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
         _scrollToBottom();
       });
     } else {
-      debugPrint('Tin nhắn rỗng, không gửi');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Không thể gửi tin nhắn. Vui lòng thử lại.")),
+      );
     }
   }
 
@@ -151,14 +154,13 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
   void dispose() {
     _tabController.dispose();
     if (_isPusherInitialized) {
-      debugPrint('Ngắt kết nối Pusher');
       _pusherService.unsubscribeFromChannel();
       _pusherService.disconnect();
     }
     _messageController.dispose();
     _scrollController.dispose();
     _chatProvider.stopPolling();
-    _chatProvider.clearMessages();
+    _chatProvider.safeClearMessages();
     super.dispose();
   }
 
@@ -204,9 +206,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Tab 1: Danh sách thông báo
           _buildNotificationTab(context),
-          // Tab 2: Nhắn tin với admin
           _buildChatTab(context),
         ],
       ),
@@ -214,11 +214,8 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
   }
 
   Widget _buildNotificationTab(BuildContext context) {
-    return Consumer<NotificationProvider>(
+    return Consumer<ChatProvider>(
       builder: (context, provider, child) {
-        debugPrint('Notifications in provider: ${provider.notifications}');
-        debugPrint('Is loading: ${provider.isLoading}, Error: ${provider.error}');
-
         if (provider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -237,7 +234,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () => provider.refreshNotifications(_token!),
+                  onPressed: () => provider.refreshNotifications(_currentUserId ?? 1, context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
@@ -291,7 +288,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withAlpha(25), // Thay withOpacity bằng withAlpha
+                    color: Colors.grey.withAlpha(25),
                     spreadRadius: 1,
                     blurRadius: 3,
                     offset: const Offset(0, 2),
@@ -313,8 +310,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                   notification.title,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight:
-                    notification.isRead ? FontWeight.normal : FontWeight.bold,
+                    fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
                     color: Colors.black,
                     fontFamily: 'Roboto',
                   ),
@@ -326,8 +322,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade600,
-                      fontWeight:
-                      notification.isRead ? FontWeight.normal : FontWeight.bold,
+                      fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
                       fontFamily: 'Roboto',
                     ),
                     maxLines: 2,
@@ -368,7 +363,7 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                 ),
                 onTap: () async {
                   if (!notification.isRead) {
-                    await provider.markAsRead(notification.id, _token!);
+                    await provider.markNotificationAsRead(notification.id);
                   }
                 },
               ),
@@ -381,12 +376,10 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
 
   Widget _buildChatTab(BuildContext context) {
     if (_isChatInitializing) {
-      debugPrint('Đang khởi tạo nhắn tin, hiển thị loading');
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_currentUserId == null) {
-      debugPrint('CurrentUserId là null, hiển thị lỗi');
       return const Center(child: Text('Lỗi: Không thể tải thông tin người dùng'));
     }
 
@@ -395,16 +388,11 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
         Expanded(
           child: Consumer<ChatProvider>(
             builder: (context, provider, child) {
-              debugPrint(
-                  'Consumer rebuild - isLoading: ${provider.isLoading}, messages: ${provider.messages.length}, error: ${provider.error}');
-
               if (provider.isLoading && provider.messages.isEmpty) {
-                debugPrint('Hiển thị CircularProgressIndicator vì đang tải lần đầu');
                 return const Center(child: CircularProgressIndicator());
               }
 
               if (provider.error != null) {
-                debugPrint('Hiển thị lỗi: ${provider.error}');
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -421,7 +409,6 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
-                          debugPrint('Nhấn nút Thử lại');
                           provider.refreshMessages(_admin.id, _currentUserId!, context,
                               receiverType: 'App\\Models\\Admin');
                         },
@@ -451,7 +438,6 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
               }
 
               if (provider.messages.isEmpty) {
-                debugPrint('Hiển thị thông báo "Chưa có tin nhắn nào"');
                 return const Center(
                   child: Text(
                     'Chưa có tin nhắn nào.',
@@ -464,67 +450,70 @@ class _NotificationScreenState extends State<NotificationScreen> with SingleTick
                 );
               }
 
-              debugPrint('Hiển thị danh sách tin nhắn với số lượng: ${provider.messages.length}');
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _scrollToBottom();
               });
               return ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                 reverse: true,
                 itemCount: provider.messages.length,
                 itemBuilder: (context, index) {
                   final message = provider.messages[provider.messages.length - 1 - index];
                   final isSent =
                       message.senderId == _currentUserId && message.senderType == 'App\\Models\\User';
-                  debugPrint('Hiển thị tin nhắn $index: ${message.content}, isSent: $isSent');
-                  return Align(
-                    alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSent ? const Color(0xFF0084FF) : const Color(0xFFF0F2F5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment:
-                        isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        children: [
-                          if (message.senderName != null)
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Align(
+                      alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.75,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSent ? const Color(0xFF0084FF) : const Color(0xFFF0F2F5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment:
+                          isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            if (message.senderName != null)
+                              Text(
+                                message.senderName!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isSent ? Colors.white70 : Colors.grey.shade600,
+                                  fontFamily: 'Roboto',
+                                ),
+                              ),
+                            const SizedBox(height: 4),
                             Text(
-                              message.senderName!,
+                              message.content,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: isSent ? Colors.white : Colors.black,
+                                fontFamily: 'Roboto',
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              message.getFormattedTime(),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isSent ? Colors.white70 : Colors.grey.shade600,
                                 fontFamily: 'Roboto',
                               ),
                             ),
-                          const SizedBox(height: 4),
-                          Text(
-                            message.content,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isSent ? Colors.white : Colors.black,
-                              fontFamily: 'Roboto',
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            message.getFormattedTime(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isSent ? Colors.white70 : Colors.grey.shade600,
-                              fontFamily: 'Roboto',
-                            ),
-                          ),
-                          if (isSent && message.isRead)
-                            const Icon(
-                              Icons.check_circle,
-                              size: 12,
-                              color: Colors.white70,
-                            ),
-                        ],
+                            if (isSent && message.isRead)
+                              const Icon(
+                                Icons.check_circle,
+                                size: 12,
+                                color: Colors.white70,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   );

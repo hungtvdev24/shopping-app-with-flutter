@@ -3,7 +3,7 @@ class AppNotification {
   final String title;
   final String content;
   final DateTime createdAt;
-  final bool isRead;
+  bool isRead; // Bỏ final để có thể thay đổi giá trị
 
   AppNotification({
     required this.id,

@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../core/api/chat_service.dart';
 import '../core/models/message.dart';
-import '../providers/auth_provider.dart';
-import 'dart:async'; // Thêm để sử dụng Timer
+import '../core/models/notification.dart'; // Cập nhật đường dẫn dựa trên cấu trúc thư mục
+import 'dart:async';
 
 class ChatProvider with ChangeNotifier {
   List<Message> _messages = [];
+  List<AppNotification> _notifications = [];
   bool _isLoading = false;
   String? _error;
-  Timer? _pollingTimer; // Timer để polling tin nhắn
-  int? _currentReceiverId; // Lưu receiverId của cuộc trò chuyện hiện tại
-  String? _currentReceiverType; // Lưu receiverType của cuộc trò chuyện hiện tại
-  int? _currentUserId; // Lưu currentUserId của cuộc trò chuyện hiện tại
+  Timer? _pollingTimer;
+  int? _currentReceiverId;
+  String? _currentReceiverType;
+  int? _currentUserId;
 
   List<Message> get messages => _messages;
+  List<AppNotification> get notifications => _notifications;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int? get currentUserId => _currentUserId; // Getter public cho _currentUserId
+  int get unreadCount {
+    return _messages.where((msg) => !msg.isRead && msg.receiverId == _currentUserId).length +
+        _notifications.where((notif) => !notif.isRead).length;
+  }
 
   final ChatService _chatService = ChatService();
 
+  /// Lấy danh sách tin nhắn từ API
   Future<void> fetchMessages(
       int receiverId,
       int currentUserId,
@@ -28,136 +35,171 @@ class ChatProvider with ChangeNotifier {
       }) async {
     _isLoading = true;
     _error = null;
-    _currentReceiverId = receiverId; // Lưu thông tin cuộc trò chuyện
+    _currentReceiverId = receiverId;
     _currentReceiverType = receiverType;
     _currentUserId = currentUserId;
-    print('Bắt đầu lấy tin nhắn: receiverId=$receiverId, currentUserId=$currentUserId, receiverType=$receiverType');
     notifyListeners();
 
     try {
-      final messages = await _chatService.fetchMessages(
-        receiverId,
-        receiverType: receiverType,
-      );
-      print('Dữ liệu tin nhắn trước khi lọc: $messages');
-      final filteredMessages = messages.where((msg) {
-        final isMatch = (msg.senderId == currentUserId &&
-            msg.senderType == 'App\\Models\\User' &&
-            msg.receiverId == receiverId &&
-            msg.receiverType == receiverType) ||
-            (msg.senderId == receiverId &&
-                msg.senderType == receiverType &&
-                msg.receiverId == currentUserId &&
-                msg.receiverType == 'App\\Models\\User');
-        print(
-            'Tin nhắn: ${msg.content}, Khớp: $isMatch, senderId: ${msg.senderId}, senderType: ${msg.senderType}, receiverId: ${msg.receiverId}, receiverType: ${msg.receiverType}');
+      final messages = await _chatService.fetchMessages(receiverId, receiverType: receiverType);
+      _messages = messages.where((msg) {
+        final isMatch = (msg.senderId == currentUserId && msg.senderType == 'App\\Models\\User' &&
+            msg.receiverId == receiverId && msg.receiverType == receiverType) ||
+            (msg.senderId == receiverId && msg.senderType == receiverType &&
+                msg.receiverId == currentUserId && msg.receiverType == 'App\\Models\\User');
         return isMatch;
       }).toList();
-
-      _messages = filteredMessages;
-      print('Dữ liệu tin nhắn sau khi lọc: $_messages');
     } catch (e) {
-      _error = e.toString();
-      print('Lỗi khi lấy tin nhắn: $e');
+      _error = 'Lỗi khi lấy tin nhắn: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  /// Lấy danh sách thông báo từ API
+  Future<void> fetchNotifications(int currentUserId, BuildContext context) async {
+    _isLoading = true;
+    _error = null;
+    _currentUserId = currentUserId;
+    notifyListeners();
+
+    try {
+      final notificationsData = await _chatService.fetchNotifications(currentUserId);
+      final notifications = notificationsData.map((json) => AppNotification.fromJson(json)).toList();
+      _notifications = notifications;
+    } catch (e) {
+      _error = 'Lỗi khi lấy thông báo: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Gửi tin nhắn mới
   Future<void> sendMessage(
       int receiverId,
       String content,
-      int currentUserId, // Nhận currentUserId trực tiếp
+      int currentUserId,
       BuildContext context, {
         String receiverType = 'App\\Models\\User',
       }) async {
-    print('Bắt đầu gửi tin nhắn: receiverId=$receiverId, content=$content, receiverType=$receiverType');
+    // Lưu trữ NavigatorState để tránh sử dụng BuildContext qua async gap
+    final navigator = Navigator.of(context);
     try {
       if (currentUserId == 0) {
-        throw Exception("Không thể lấy ID người dùng hiện tại. Vui lòng đăng nhập lại.");
+        throw Exception('Không thể lấy ID người dùng hiện tại. Vui lòng đăng nhập lại.');
       }
-
       await _chatService.sendMessage(receiverId, content, receiverType: receiverType);
-      print('Gửi tin nhắn thành công');
       await fetchMessages(receiverId, currentUserId, context, receiverType: receiverType);
     } catch (e) {
-      _error = e.toString();
-      print('Lỗi khi gửi tin nhắn: $e');
+      _error = 'Lỗi khi gửi tin nhắn: $e';
       notifyListeners();
-      if (e.toString().contains("Không thể lấy ID người dùng hiện tại")) {
-        Navigator.pushReplacementNamed(context, '/login');
+      if (_error!.contains('Không thể lấy ID người dùng hiện tại') || _error!.contains('Không tìm thấy token')) {
+        navigator.pushReplacementNamed('/login');
       }
     }
   }
 
+  /// Đánh dấu tin nhắn đã đọc
   Future<void> markAsRead(int messageId) async {
     try {
       await _chatService.markAsRead(messageId);
-      final message = _messages.firstWhere((msg) => msg.id == messageId);
-      message.isRead = true;
-      notifyListeners();
+      final messageIndex = _messages.indexWhere((msg) => msg.id == messageId);
+      if (messageIndex != -1) {
+        _messages[messageIndex].isRead = true;
+        notifyListeners();
+      }
     } catch (e) {
-      print('Lỗi khi đánh dấu tin nhắn đã đọc: $e');
+      debugPrint('Lỗi khi đánh dấu tin nhắn đã đọc: $e');
     }
   }
 
-  void addMessage(Message message) {
-    // Kiểm tra xem tin nhắn mới có thuộc cuộc trò chuyện hiện tại không
-    if (_currentReceiverId == null || _currentUserId == null || _currentReceiverType == null) {
-      print('Không thể thêm tin nhắn: Thông tin cuộc trò chuyện chưa được thiết lập');
-      return;
+  /// Đánh dấu thông báo đã đọc
+  Future<void> markNotificationAsRead(int notificationId) async {
+    try {
+      await _chatService.markNotificationAsRead(notificationId);
+      final notificationIndex = _notifications.indexWhere((notif) => notif.id == notificationId);
+      if (notificationIndex != -1) {
+        _notifications[notificationIndex].isRead = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi đánh dấu thông báo đã đọc: $e');
     }
+  }
 
-    final isMatch = (message.senderId == _currentUserId &&
-        message.senderType == 'App\\Models\\User' &&
-        message.receiverId == _currentReceiverId &&
-        message.receiverType == _currentReceiverType) ||
-        (message.senderId == _currentReceiverId &&
-            message.senderType == _currentReceiverType &&
-            message.receiverId == _currentUserId &&
-            message.receiverType == 'App\\Models\\User');
-
+  /// Thêm tin nhắn mới vào danh sách
+  void addMessage(Message message) {
+    if (_currentReceiverId == null || _currentUserId == null || _currentReceiverType == null) return;
+    final isMatch = (message.senderId == _currentUserId && message.senderType == 'App\\Models\\User' &&
+        message.receiverId == _currentReceiverId && message.receiverType == _currentReceiverType) ||
+        (message.senderId == _currentReceiverId && message.senderType == _currentReceiverType &&
+            message.receiverId == _currentUserId && message.receiverType == 'App\\Models\\User');
     if (isMatch) {
-      print('Thêm tin nhắn mới: ${message.content}');
       _messages.add(message);
       notifyListeners();
-    } else {
-      print('Tin nhắn không thuộc cuộc trò chuyện hiện tại: ${message.content}');
     }
   }
 
+  /// Thêm thông báo mới vào danh sách
+  void addNotification(AppNotification notification) {
+    if (_currentUserId == null) return;
+    // Không kiểm tra userId vì AppNotification không có userId, chỉ dựa vào dữ liệu từ API
+    _notifications.add(notification);
+    notifyListeners();
+  }
+
+  /// Làm mới danh sách tin nhắn
   Future<void> refreshMessages(
       int receiverId,
       int currentUserId,
       BuildContext context, {
         String receiverType = 'App\\Models\\User',
       }) async {
-    print('Làm mới tin nhắn: receiverId=$receiverId, currentUserId=$currentUserId');
     await fetchMessages(receiverId, currentUserId, context, receiverType: receiverType);
   }
 
-  void startPolling(BuildContext context) {
-    // Dừng timer cũ nếu có
-    stopPolling();
+  /// Làm mới danh sách thông báo
+  Future<void> refreshNotifications(int currentUserId, BuildContext context) async {
+    await fetchNotifications(currentUserId, context);
+  }
 
-    // Bắt đầu polling mỗi 10 giây
-    _pollingTimer = Timer.periodic(Duration(seconds: 10), (timer) {
-      if (_currentReceiverId != null && _currentUserId != null && _currentReceiverType != null) {
-        print('Polling tin nhắn mới...');
-        fetchMessages(_currentReceiverId!, _currentUserId!, context, receiverType: _currentReceiverType!);
+  /// Bắt đầu polling để kiểm tra tin nhắn và thông báo mới
+  void startPolling(BuildContext context) {
+    stopPolling();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (_currentUserId != null) {
+        fetchNotifications(_currentUserId!, context);
+        if (_currentReceiverId != null && _currentReceiverType != null) {
+          fetchMessages(_currentReceiverId!, _currentUserId!, context, receiverType: _currentReceiverType!);
+        }
       }
     });
   }
 
+  /// Dừng polling
   void stopPolling() {
     _pollingTimer?.cancel();
     _pollingTimer = null;
   }
 
-  void clearMessages() {
-    print('Xóa tất cả tin nhắn');
+  /// Xóa tất cả tin nhắn và trạng thái (không thông báo UI)
+  void safeClearMessages() {
     _messages = [];
+    _notifications = [];
+    _error = null;
+    _isLoading = false;
+    _currentReceiverId = null;
+    _currentReceiverType = null;
+    _currentUserId = null;
+    stopPolling();
+  }
+
+  /// Xóa tất cả tin nhắn và thông báo UI
+  void clearMessages() {
+    _messages = [];
+    _notifications = [];
     _error = null;
     _isLoading = false;
     _currentReceiverId = null;

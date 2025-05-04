@@ -5,12 +5,12 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   String? _token;
-  Map<String, dynamic>? _userData; // Biến để lưu thông tin người dùng
+  Map<String, dynamic>? _userData;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String? get token => _token;
-  Map<String, dynamic>? get userData => _userData; // Getter cho userData
+  Map<String, dynamic>? get userData => _userData;
 
   Future<bool> login(String email, String password) async {
     _isLoading = true;
@@ -19,18 +19,26 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       print('Thử đăng nhập: email=$email, password=$password');
-      final response = await ApiClient.postData('login', {
-        'email': email,
-        'password': password,
-      });
-
+      final response = await ApiClient.postData(
+        'login',
+        {
+          'email': email,
+          'password': password,
+        },
+        skipAuth: true, // Không yêu cầu token cho login
+      );
       print('Phản hồi đăng nhập: $response');
-      if (response.containsKey('token')) {
+
+      if (response.containsKey('token') && response.containsKey('user') && response['user']['id'] != null) {
         _token = response['token'] as String;
+        await ApiClient.saveToken(_token!); // Lưu token vào SharedPreferences
+        await ApiClient.saveToken(_token!); // Lưu lại để đảm bảo
         _errorMessage = null;
         print('Đăng nhập thành công, Token: $_token');
-        // Gọi API để lấy thông tin người dùng sau khi đăng nhập thành công
-        await fetchUserData(); // Sửa _fetchUserData thành fetchUserData
+        await fetchUserData();
+        _isLoading = false;
+        notifyListeners();
+        return true;
       } else if (response.containsKey('error')) {
         _errorMessage = response['error'] as String;
         print('Đăng nhập thất bại: $_errorMessage');
@@ -40,7 +48,7 @@ class AuthProvider extends ChangeNotifier {
       }
       _isLoading = false;
       notifyListeners();
-      return _token != null;
+      return false;
     } catch (e) {
       _errorMessage = "Lỗi khi đăng nhập: $e";
       _isLoading = false;
@@ -57,17 +65,27 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       print('Thử đăng ký: name=$name, email=$email, phone=$phone, password=$password');
-      final response = await ApiClient.postData('register', {
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'password': password,
-      });
-
+      final response = await ApiClient.postData(
+        'register',
+        {
+          'name': name,
+          'email': email,
+          'phone': phone,
+          'password': password,
+        },
+        skipAuth: true, // Không yêu cầu token cho register
+      );
       print('Phản hồi đăng ký: $response');
-      if (response.containsKey('message') && response['message'] == 'Đăng ký thành công') {
+
+      if (response.containsKey('token') && response.containsKey('user') && response['user']['id'] != null) {
+        _token = response['token'] as String;
+        await ApiClient.saveToken(_token!); // Lưu token vào SharedPreferences
         _errorMessage = null;
-        print('Đăng ký thành công');
+        print('Đăng ký thành công, Token: $_token');
+        await fetchUserData();
+        _isLoading = false;
+        notifyListeners();
+        return true;
       } else if (response.containsKey('error')) {
         _errorMessage = response['error'] as String;
         print('Đăng ký thất bại: $_errorMessage');
@@ -77,7 +95,7 @@ class AuthProvider extends ChangeNotifier {
       }
       _isLoading = false;
       notifyListeners();
-      return _errorMessage == null;
+      return false;
     } catch (e) {
       _errorMessage = "Lỗi khi đăng ký: $e";
       _isLoading = false;
@@ -87,22 +105,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Phương thức để lấy thông tin người dùng
   Future<void> fetchUserData() async {
-    if (_token == null) {
-      _errorMessage = "Không có token để lấy thông tin người dùng.";
-      notifyListeners();
-      return;
-    }
-
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response = await ApiClient.getData('user', token: _token);
+      final response = await ApiClient.getData('user');
       print('Phản hồi lấy dữ liệu người dùng: $response');
-      if (response.containsKey('id')) {
-        _userData = response; // Lưu thông tin người dùng
+      if (response.containsKey('user') && response['user']['id'] != null) {
+        _userData = response['user'];
         _errorMessage = null;
         print('Lấy dữ liệu người dùng thành công: $_userData');
       } else {
@@ -114,16 +125,25 @@ class AuthProvider extends ChangeNotifier {
       print('Lỗi lấy dữ liệu người dùng: $_errorMessage');
     }
 
+
+
     _isLoading = false;
     notifyListeners();
   }
 
-  // Phương thức đăng xuất
-  void logout(BuildContext context) {
-    _token = null;
-    _userData = null;
-    _errorMessage = null;
-    notifyListeners();
-    Navigator.pushReplacementNamed(context, '/login');
+  Future<void> logout(BuildContext context) async {
+    try {
+      await ApiClient.clearToken();
+      _token = null;
+      _userData = null;
+      _errorMessage = null;
+      print('Đăng xuất thành công');
+      notifyListeners();
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      _errorMessage = "Lỗi khi đăng xuất: $e";
+      print('Lỗi đăng xuất: $_errorMessage');
+      notifyListeners();
+    }
   }
 }

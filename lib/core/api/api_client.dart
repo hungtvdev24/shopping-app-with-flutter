@@ -4,65 +4,73 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
-  static const String baseUrl = "https://89c3-42-114-39-2.ngrok-free.app/api";
+  static const String baseUrl = "https://88a8-42-114-39-2.ngrok-free.app/api";
+  static const String storageUrl = "https://88a8-42-114-39-2.ngrok-free.app/storage";
 
+  // Lấy token từ SharedPreferences
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    print('Get token: $token');
+    print('Retrieved token: $token');
     return token;
   }
 
+  // Lưu token
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
-    print('Token saved: $token');
+    print('Saved token: $token');
   }
 
+  // Xóa token
   static Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
-    print('Token cleared');
+    await prefs.remove('user_id');
+    print('Cleared token and user_id');
   }
 
-  static Future<Map<String, dynamic>> postData(String url, Map<String, dynamic> data, {String? token}) async {
+  // Gửi yêu cầu POST
+  static Future<Map<String, dynamic>> postData(
+      String endpoint,
+      Map<String, dynamic> data, {
+        String? token,
+        bool skipAuth = false,
+      }) async {
     try {
-      // Bỏ qua kiểm tra token cho /api/login
-      final isLoginRequest = url.contains('login');
-      if (!isLoginRequest) {
+      if (!skipAuth) {
         token ??= await getToken();
         if (token == null) {
           throw Exception("Không tìm thấy token. Vui lòng đăng nhập lại.");
         }
       }
-
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "ngrok-skip-browser-warning": "true",
       };
-      if (!isLoginRequest && token != null) {
+      if (!skipAuth && token != null) {
         headers["Authorization"] = "Bearer $token";
       }
-
-      final fullUrl = url.startsWith('http') ? url : "$baseUrl/$url";
-
+      final url = endpoint.startsWith('http') ? endpoint : "$baseUrl/$endpoint";
+      print('POST request to: $url with data: $data');
       final response = await http.post(
-        Uri.parse(fullUrl),
+        Uri.parse(url),
         headers: headers,
         body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 10));
-
-      print('POST Request URL: $fullUrl');
-      print('Request data: $data');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      ).timeout(const Duration(seconds: 30));
+      print('Response: status=${response.statusCode}, body=${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception("Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
+      } else if (response.statusCode == 422) {
+        final errorBody = jsonDecode(response.body);
+        throw Exception('Dữ liệu không hợp lệ: ${errorBody["errors"] ?? response.body}');
       } else {
         final errorBody = jsonDecode(response.body);
-        throw Exception(errorBody["message"] ?? "Lỗi: ${response.statusCode} - ${response.body}");
+        throw Exception('Lỗi ${response.statusCode}: ${errorBody["error"] ?? response.body}');
       }
     } catch (e) {
       print('Error in postData: $e');
@@ -70,7 +78,8 @@ class ApiClient {
     }
   }
 
-  static Future<dynamic> getData(String url, {String? token}) async {
+  // Gửi yêu cầu GET
+  static Future<dynamic> getData(String endpoint, {String? token}) async {
     try {
       token ??= await getToken();
       if (token == null) {
@@ -81,23 +90,21 @@ class ApiClient {
         "ngrok-skip-browser-warning": "true",
         "Authorization": "Bearer $token",
       };
-
-      final fullUrl = url.startsWith('http') ? url : "$baseUrl/$url";
-
+      final url = endpoint.startsWith('http') ? endpoint : "$baseUrl/$endpoint";
+      print('GET request to: $url');
       final response = await http.get(
-        Uri.parse(fullUrl),
+        Uri.parse(url),
         headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      print('GET Request URL: $fullUrl');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      ).timeout(const Duration(seconds: 30));
+      print('Response: status=${response.statusCode}, body=${response.body}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception("Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
       } else {
         final errorBody = jsonDecode(response.body);
-        throw Exception(errorBody["message"] ?? "Lỗi: ${response.statusCode} - ${response.body}");
+        throw Exception('Lỗi ${response.statusCode}: ${errorBody["error"] ?? response.body}');
       }
     } catch (e) {
       print('Error in getData: $e');
@@ -105,7 +112,12 @@ class ApiClient {
     }
   }
 
-  static Future<Map<String, dynamic>> putData(String url, Map<String, dynamic> data, {String? token}) async {
+  // Gửi yêu cầu PUT
+  static Future<Map<String, dynamic>> putData(
+      String endpoint,
+      Map<String, dynamic> data, {
+        String? token,
+      }) async {
     try {
       token ??= await getToken();
       if (token == null) {
@@ -117,25 +129,24 @@ class ApiClient {
         "ngrok-skip-browser-warning": "true",
         "Authorization": "Bearer $token",
       };
-
-      final fullUrl = url.startsWith('http') ? url : "$baseUrl/$url";
-
+      final url = endpoint.startsWith('http') ? endpoint : "$baseUrl/$endpoint";
+      print('PUT request to: $url with data: $data');
       final response = await http.put(
-        Uri.parse(fullUrl),
+        Uri.parse(url),
         headers: headers,
         body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 10));
-
-      print('PUT Request URL: $fullUrl');
-      print('Request data: $data');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      ).timeout(const Duration(seconds: 30));
+      print('Response: status=${response.statusCode}, body=${response.body}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception("Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
       } else {
         final errorBody = jsonDecode(response.body);
-        throw Exception(errorBody["message"] ?? "Lỗi: ${response.statusCode} - ${response.body}");
+        throw Exception('Lỗi ${response.statusCode}: ${errorBody["error"]
+
+            ?? response.body}');
       }
     } catch (e) {
       print('Error in putData: $e');
@@ -143,7 +154,8 @@ class ApiClient {
     }
   }
 
-  static Future<Map<String, dynamic>> deleteData(String url, {String? token}) async {
+  // Gửi yêu cầu DELETE
+  static Future<Map<String, dynamic>> deleteData(String endpoint, {String? token}) async {
     try {
       token ??= await getToken();
       if (token == null) {
@@ -154,23 +166,21 @@ class ApiClient {
         "ngrok-skip-browser-warning": "true",
         "Authorization": "Bearer $token",
       };
-
-      final fullUrl = url.startsWith('http') ? url : "$baseUrl/$url";
-
+      final url = endpoint.startsWith('http') ? endpoint : "$baseUrl/$endpoint";
+      print('DELETE request to: $url');
       final response = await http.delete(
-        Uri.parse(fullUrl),
+        Uri.parse(url),
         headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      print('DELETE Request URL: $fullUrl');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      ).timeout(const Duration(seconds: 30));
+      print('Response: status=${response.statusCode}, body=${response.body}');
 
       if (response.statusCode == 200) {
         return {"message": "Xóa thành công"};
+      } else if (response.statusCode == 401) {
+        throw Exception("Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
       } else {
         final errorBody = jsonDecode(response.body);
-        throw Exception(errorBody["message"] ?? "Lỗi: ${response.statusCode} - ${response.body}");
+        throw Exception('Lỗi ${response.statusCode}: ${errorBody["error"] ?? response.body}');
       }
     } catch (e) {
       print('Error in deleteData: $e');
@@ -178,6 +188,7 @@ class ApiClient {
     }
   }
 
+  // Gửi tin nhắn
   static Future<Map<String, dynamic>> sendMessage(
       int receiverId,
       String content, {
@@ -190,6 +201,7 @@ class ApiClient {
     });
   }
 
+  // Lấy danh sách tin nhắn
   static Future<List<dynamic>> getMessages(
       int receiverId, {
         String receiverType = 'App\\Models\\User',
@@ -200,22 +212,43 @@ class ApiClient {
     return response['data'];
   }
 
+  // Đánh dấu tin nhắn đã đọc
   static Future<Map<String, dynamic>> markMessageAsRead(int messageId) async {
     return await postData('messages/$messageId/read', {});
   }
 
+  // Lấy danh sách thông báo
+  static Future<List<dynamic>> getNotifications(int userId) async {
+    final uri = Uri.parse("$baseUrl/notifications?user_id=$userId");
+    final response = await getData(uri.toString());
+    return response['data'];
+  }
+
+  // Đánh dấu thông báo đã đọc
+  static Future<Map<String, dynamic>> markNotificationAsRead(int notificationId) async {
+    return await postData('notifications/$notificationId/read', {});
+  }
+
+  // Lấy danh sách người dùng
   static Future<List<dynamic>> getUsers() async {
     final response = await getData('users');
     return response['users'];
   }
 
+  // Lấy thông tin người dùng hiện tại
   static Future<Map<String, dynamic>> getUser() async {
     final response = await getData('user');
     return response['user'];
   }
 
+  // Lấy danh sách admin
   static Future<List<dynamic>> getAdmins() async {
     final response = await getData('admins');
     return response['admins'];
+  }
+
+  // Lấy URL hình ảnh
+  static String getImageUrl(String imagePath) {
+    return '$storageUrl/$imagePath';
   }
 }

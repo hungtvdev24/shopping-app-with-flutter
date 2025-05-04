@@ -49,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       final user = await authService.getUser();
       print('User data: $user');
-      _currentUserId = user['id'];
+      _currentUserId = user['user']['id']; // Sửa để lấy từ user[user][id]
       if (_currentUserId == null) {
         print('Không thể lấy ID người dùng');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     _chatProvider.stopPolling(); // Dừng polling
-    _chatProvider.clearMessages();
+    _chatProvider.safeClearMessages(); // Sử dụng safeClearMessages để tránh lỗi widget tree
     super.dispose();
   }
 
