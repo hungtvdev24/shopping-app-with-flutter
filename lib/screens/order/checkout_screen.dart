@@ -5,9 +5,11 @@ import '../../providers/address_provider.dart';
 import '../../providers/checkout_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/voucher_provider.dart';
+import '../../providers/myorder_provider.dart';
 import '../../core/models/address.dart';
 import '../../core/models/voucher.dart';
 import '../../routes.dart';
+import '../../core/api/api_client.dart';
 import 'package:intl/intl.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -42,20 +44,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final addressProvider = Provider.of<AddressProvider>(context, listen: false);
       final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
       final token = userProvider.token;
-      if (token != null) {
-        addressProvider.fetchAddresses(token).then((_) {
-          if (addressProvider.addresses.isNotEmpty) {
-            setState(() {
-              selectedAddress = addressProvider.addresses[0];
-            });
-          }
-        });
-        voucherProvider.fetchVouchers(token);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng đăng nhập để tiếp tục!')),
-        );
-      }
+      addressProvider.fetchAddresses(token!).then((_) {
+        if (addressProvider.addresses.isNotEmpty) {
+          setState(() {
+            selectedAddress = addressProvider.addresses[0];
+          });
+        }
+      });
+      voucherProvider.fetchVouchers(token);
     });
   }
 
@@ -66,6 +62,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void applyVoucher(Voucher voucher) {
+    if (!voucher.isUsable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voucher không khả dụng hoặc đã hết lượt sử dụng!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (widget.totalPrice < (voucher.minOrderValue ?? 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -81,9 +87,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     double discount = 0.0;
 
     if (voucher.discountType == 'fixed') {
-      discount = voucher.discountValue ?? 0.0;
+      discount = voucher.discountValue;
     } else if (voucher.discountType == 'percentage') {
-      final discountValue = voucher.discountValue ?? 0.0;
+      final discountValue = voucher.discountValue;
       discount = (discountValue / 100) * total;
       final maxDiscount = voucher.maxDiscount ?? double.infinity;
       if (discount > maxDiscount) {
@@ -106,6 +112,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    if (selectedVoucher != null && !selectedVoucher!.isUsable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voucher không khả dụng hoặc đã hết lượt sử dụng!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (selectedVoucher != null && widget.totalPrice < (selectedVoucher!.minOrderValue ?? 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -118,7 +134,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     if (paymentMethod == 'VN_PAY') {
-      // Với VNPay, chỉ lấy URL thanh toán, không tạo đơn hàng ngay
       try {
         await checkoutProvider.getVNPayPaymentUrl(
           token: token,
@@ -153,12 +168,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Thanh toán và đặt hàng thành công')),
                       );
+                      final myOrderProvider = Provider.of<MyOrderProvider>(context, listen: false);
+                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                      if (userProvider.token != null) {
+                        myOrderProvider.loadOrders(userProvider.token!);
+                      }
                       Navigator.pop(context);
                       Navigator.pop(context, true);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Thanh toán thất bại: Mã lỗi ${responseCode}'),
+                          content: Text('Thanh toán thất bại: Mã lỗi ${responseCode ?? "Không xác định"}'),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -180,6 +200,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Navigator.pop(context);
                   }
                 },
+                onWebResourceError: (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Lỗi tải trang thanh toán: ${error.description}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  Navigator.pop(context);
+                },
               ),
             )
             ..loadRequest(Uri.parse(checkoutProvider.qrCode!));
@@ -196,7 +225,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Không thể tạo URL thanh toán VNPay. Vui lòng thử lại.'),
+              content: Text('Không nhận được URL thanh toán từ server. Vui lòng thử lại.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -204,13 +233,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã xảy ra lỗi: $e'),
+            content: Text('Lỗi thanh toán VNPay: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } else if (paymentMethod == 'COD') {
-      // Với COD, tạo đơn hàng ngay
       try {
         await checkoutProvider.placeOrder(
           token: token,
@@ -238,6 +266,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             backgroundColor: Colors.green,
           ),
         );
+        final myOrderProvider = Provider.of<MyOrderProvider>(context, listen: false);
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        if (userProvider.token != null) {
+          myOrderProvider.loadOrders(userProvider.token!);
+        }
         Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -397,6 +430,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   const SizedBox(height: 8),
                   ...widget.selectedItems.map((item) {
+                    // Đảm bảo URL hình ảnh đầy đủ
+                    final imageUrl = item['image'] != null && item['image'].isNotEmpty
+                        ? (item['image'].startsWith('http')
+                        ? item['image']
+                        : '${ApiClient.storageUrl}/${item['image']}')
+                        : 'https://via.placeholder.com/50';
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Row(
@@ -405,7 +445,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              item['image'] ?? 'https://via.placeholder.com/50',
+                              imageUrl,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
@@ -474,7 +514,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, AppRoutes.voucherList).then((value) {
-                            if (value != null && value is Voucher) {
+                            if (value != null && value is Voucher && value.isUsable) {
                               applyVoucher(value);
                             }
                           });
@@ -499,12 +539,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           value: selectedVoucher,
                           hint: const Text('Chọn voucher'),
                           items: voucherProvider.vouchers
-                              .where((voucher) => !voucher.isUsed && widget.totalPrice >= (voucher.minOrderValue ?? 0))
+                              .where((voucher) => voucher.isUsable && widget.totalPrice >= (voucher.minOrderValue ?? 0))
                               .map((voucher) {
                             return DropdownMenuItem<Voucher>(
                               value: voucher,
-                              child: Text(
-                                "${voucher.code} - Giảm ${voucher.getFormattedDiscount()} (Đơn tối thiểu: ${voucher.getFormattedMinOrderValue()})",
+                              child: Container(
+                                constraints: const BoxConstraints(maxWidth: 300),
+                                child: Text(
+                                  "${voucher.code} - Giảm ${voucher.getFormattedDiscount()} (Đơn tối thiểu: ${voucher.getFormattedMinOrderValue()})",
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             );
                           }).toList(),

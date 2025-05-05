@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/api/voucher_service.dart';
-import '../../core/models/voucher.dart';
+import '../core/api/voucher_service.dart';
+import '../core/models/voucher.dart';
 
 class VoucherProvider extends ChangeNotifier {
   List<Voucher> _vouchers = [];
@@ -14,21 +14,22 @@ class VoucherProvider extends ChangeNotifier {
   Future<void> fetchVouchers(String token) async {
     _isLoading = true;
     _errorMessage = null;
-    print('Fetching vouchers with token: $token'); // Log token
+    print('Fetching vouchers with token: $token');
     notifyListeners();
 
     try {
       final data = await VoucherService.getVouchers(token);
       _vouchers = data;
-      print('Fetched vouchers in VoucherProvider: $_vouchers'); // Log danh sách voucher
+      print('Fetched vouchers in VoucherProvider: $_vouchers');
+      print('Usable vouchers: ${_vouchers.where((v) => v.isUsable).toList()}');
     } catch (e) {
       _errorMessage = "Không thể tải danh sách voucher: $e";
-      print('Error in VoucherProvider: $_errorMessage'); // Log lỗi
-      _vouchers = []; // Đảm bảo danh sách rỗng nếu có lỗi
+      print('Error in VoucherProvider: $_errorMessage');
+      _vouchers = [];
     }
 
     _isLoading = false;
-    print('Loading state: $_isLoading'); // Log trạng thái loading
+    print('Loading state: $_isLoading');
     notifyListeners();
   }
 }

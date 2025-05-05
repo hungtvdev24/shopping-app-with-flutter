@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../core/api/api_client.dart';
 import '../../providers/myorder_provider.dart';
 import '../../providers/user_provider.dart';
 import '../order/order_detail_screen.dart';
@@ -23,11 +24,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
     super.initState();
     dateTimeFormat = DateFormat("dd/MM/yyyy HH:mm", "vi_VN");
     _tabController = TabController(length: 5, vsync: this);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final myOrderProvider = Provider.of<MyOrderProvider>(context, listen: false);
-    if (userProvider.token != null) {
-      myOrderProvider.loadOrders(userProvider.token!);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final myOrderProvider = Provider.of<MyOrderProvider>(context, listen: false);
+      if (userProvider.token != null) {
+        myOrderProvider.loadOrders(userProvider.token!);
+      }
+    });
   }
 
   @override
@@ -231,11 +234,18 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
     final double price = double.tryParse(item['gia']?.toString() ?? '0') ?? 0.0;
     final int quantity = item['soLuong'] ?? 1;
     final int productId = item['id_sanPham'] ?? 0;
-    final String? image = item['variation'] != null &&
+
+    // Lấy URL hình ảnh từ variation nếu có, nếu không thì từ san_pham['urlHinhAnh']
+    String? image;
+    if (item['variation'] != null &&
         item['variation']['images'] != null &&
-        (item['variation']['images'] as List).isNotEmpty
-        ? "http://212a-104-28-254-73.ngrok-free.app/storage/${item['variation']['images'][0]['image_url']}"
-        : null;
+        item['variation']['images'].isNotEmpty) {
+      image = ApiClient.getImageUrl(item['variation']['images'][0]['image_url']);
+    } else {
+      image = item['san_pham'] != null && item['san_pham']['urlHinhAnh'] != null
+          ? item['san_pham']['urlHinhAnh']
+          : "https://via.placeholder.com/150";
+    }
 
     final double screenWidth = MediaQuery.of(context).size.width;
     final double imageSize = screenWidth * 0.15;
@@ -244,7 +254,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
       onTap: () {
         final productDetail = {
           'id_sanPham': productId,
-          'urlHinhAnh': image ?? "https://picsum.photos/150",
+          'urlHinhAnh': image,
           'thuongHieu': thuongHieu,
           'tenSanPham': name,
           'gia': price,
@@ -272,12 +282,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
                 bottomLeft: Radius.circular(12),
               ),
               child: Image.network(
-                image ?? "https://picsum.photos/150",
+                image!,
                 width: imageSize,
                 height: imageSize,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint("Error loading image: $error");
                   return Container(
                     color: Colors.grey[300],
                     alignment: Alignment.center,
@@ -371,14 +380,24 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
     for (var order in orders) {
       final items = order['chi_tiet_don_hang'] as List<dynamic>;
       for (var item in items) {
+        // Lấy URL hình ảnh từ variation nếu có, nếu không thì từ san_pham['urlHinhAnh']
+        String? image;
+        if (item['variation'] != null &&
+            item['variation']['images'] != null &&
+            item['variation']['images'].isNotEmpty) {
+          image = ApiClient.getImageUrl(item['variation']['images'][0]['image_url']);
+        } else {
+          image = item['san_pham'] != null && item['san_pham']['urlHinhAnh'] != null
+              ? item['san_pham']['urlHinhAnh']
+              : "https://via.placeholder.com/150";
+        }
+
         purchasedProducts.add({
           'orderId': order['id_donHang'] ?? 0,
           'productId': item['id_sanPham'] ?? 0,
           'variationId': item['variation_id'] ?? 0,
           'productName': item['san_pham'] != null ? item['san_pham']['tenSanPham'] : "Sản phẩm #${item['id_sanPham']}",
-          'productImage': item['variation'] != null && item['variation']['images'] != null && (item['variation']['images'] as List).isNotEmpty
-              ? "http://212a-104-28-254-73.ngrok-free.app/storage/${item['variation']['images'][0]['image_url']}"
-              : "https://picsum.photos/150",
+          'productImage': image,
           'price': item['gia'],
           'quantity': item['soLuong'] ?? 1,
           'thuongHieu': item['san_pham'] != null ? item['san_pham']['thuongHieu'] : null,
@@ -443,7 +462,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
                       height: imageSize,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        debugPrint("Error loading purchased product image: $error");
                         return Container(
                           color: Colors.grey[300],
                           alignment: Alignment.center,

@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-// Màn hình Checkout (nếu có)
 import '../order/checkout_screen.dart';
-// Màn hình chi tiết sản phẩm
 import '../product/product_detail_screen.dart';
-
-// Providers
 import '../../providers/user_provider.dart';
 import '../../providers/cart_provider.dart';
-
-// RouteObserver (nếu bạn dùng)
 import '../../main.dart';
 
 class CartScreen extends StatefulWidget {
@@ -28,7 +21,9 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
   @override
   void initState() {
     super.initState();
-    _loadCart();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCart();
+    });
   }
 
   @override
@@ -38,7 +33,6 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
     if (modalRoute is PageRoute) {
       routeObserver.subscribe(this, modalRoute);
     }
-    _loadCart();
   }
 
   @override
@@ -66,13 +60,8 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
 
     try {
       await cartProvider.loadCart(userProvider.token!, context);
-      debugPrint('Loaded cart items: ${cartProvider.cartItems}');
-      for (var item in cartProvider.cartItems) {
-        debugPrint('Product: ${item['name']}, Image URL: ${item['image']}');
-      }
     } catch (e) {
       cartProvider.setErrorMessage('Lỗi khi tải giỏ hàng: $e');
-      debugPrint('Cart loading error: $e');
     }
   }
 
@@ -275,13 +264,32 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
                       ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        cartProvider.errorMessage!,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontFamily: 'Roboto',
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            cartProvider.errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontFamily: 'Roboto',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          IconButton(
+                            icon: const Icon(Icons.refresh, color: Colors.blue, size: 32),
+                            onPressed: _loadCart,
+                            tooltip: 'Tải lại giỏ hàng',
+                          ),
+                          const Text(
+                            'Thử lại',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontFamily: 'Roboto',
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -381,24 +389,31 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
   Widget _buildCartItem(Map<String, dynamic> product, int index, BuildContext context) {
     final String? image = product['image'];
     final String? thuongHieu = product['thuongHieu'];
-    final String? name = product['name'];
+    final String? name = product['name'] ?? product['tenSanPham'];
     final double originalPrice = product['gia'] as double;
     final int soLuong = product['soLuong'] ?? 1;
     final String? size = product['size'];
+    final int productId = product['id_sanPham'] ?? 0;
 
     final double screenWidth = MediaQuery.of(context).size.width;
     final double imageSize = screenWidth * 0.15;
     final double arrowButtonSize = screenWidth * 0.04;
 
+    final productDetail = {
+      'urlHinhAnh': image ?? "https://picsum.photos/150",
+      'thuongHieu': thuongHieu ?? "Không có thương hiệu",
+      'tenSanPham': name ?? "Không có tên",
+      'gia': originalPrice,
+      'size': size,
+      'id_sanPham': productId,
+      'id_danhMuc': product['id_danhMuc'] ?? 0,
+      'moTa': product['moTa'] ?? "Không có mô tả",
+      'soSaoDanhGia': product['soSaoDanhGia'] ?? 0,
+      'variations': product['variations'] ?? [],
+    };
+
     return GestureDetector(
       onTap: () {
-        final productDetail = {
-          'urlHinhAnh': image ?? "https://picsum.photos/150",
-          'thuongHieu': thuongHieu,
-          'tenSanPham': name,
-          'gia': originalPrice,
-          'size': size,
-        };
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -431,13 +446,12 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
                 height: imageSize,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Failed to load image: $image, error: $error');
                   return Container(
                     color: Colors.grey[300],
                     alignment: Alignment.center,
                     width: imageSize,
                     height: imageSize,
-                    child: const Text('No Image'),
+                    child: const Text('No Image', style: TextStyle(fontFamily: 'Roboto')),
                   );
                 },
                 loadingBuilder: (context, child, loadingProgress) {
@@ -461,6 +475,7 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
                   index,
                   context,
                   arrowButtonSize,
+                  size,
                 ),
               ),
             ),
@@ -478,7 +493,7 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
       int index,
       BuildContext context,
       double arrowButtonSize,
-      ) {
+      String? size) {
     final double screenWidth = MediaQuery.of(context).size.width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,6 +521,16 @@ class _CartScreenState extends State<CartScreen> with RouteAware {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        const SizedBox(height: 4),
+        if (size != null)
+          Text(
+            "Size: $size",
+            style: TextStyle(
+              fontSize: screenWidth * 0.032,
+              color: Colors.grey[600],
+              fontFamily: 'Roboto',
+            ),
+          ),
         const SizedBox(height: 4),
         Text(
           "${formatCurrency.format(originalPrice)} VNĐ",
